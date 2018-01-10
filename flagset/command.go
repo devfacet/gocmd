@@ -14,5 +14,6 @@ type Command struct {
 	argID     int
 	indexFrom int
 	indexTo   int
+	updatedBy []string // for debug
 	err       error
 }

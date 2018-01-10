@@ -21,6 +21,6 @@ type Arg struct {
 	parentID  int
 	indexFrom int
 	indexTo   int
-	updatedBy string
+	updatedBy []string // for debug
 	err       error
 }

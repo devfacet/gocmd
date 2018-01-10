@@ -45,7 +45,7 @@ type Flag struct {
 	parentID     int
 	commandID    int
 	args         []*Arg
-	updatedBy    string
+	updatedBy    []string // for debug
 	err          error
 }
 
@@ -112,6 +112,16 @@ func (f *Flag) ValueBy() string {
 // Kind returns the kind of the flag
 func (f *Flag) Kind() string {
 	return f.kind
+}
+
+// FieldIndex returns the parent flag id of the flag
+func (f *Flag) FieldIndex() []int {
+	return f.fieldIndex
+}
+
+// ParentIndex returns the parent flag id of the flag
+func (f *Flag) ParentIndex() []int {
+	return f.parentIndex
 }
 
 // ParentID returns the parent flag id of the flag

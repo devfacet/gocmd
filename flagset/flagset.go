@@ -380,10 +380,13 @@ func (flagSet *FlagSet) parseCommands() {
 				if found == true {
 					cmd.indexFrom = argIndex
 					cmd.argID = argIndex
+					cmd.updatedBy = append(cmd.updatedBy, "found in the arguments")
 					// If the previous command is found in the arguments then
 					if i > 0 && flagSet.commands[i-1].argID != -1 {
 						// Update the previous command
-						flagSet.commands[i-1].indexTo = argIndex
+						prevCmd := flagSet.commands[i-1]
+						prevCmd.indexTo = argIndex
+						prevCmd.updatedBy = append(prevCmd.updatedBy, "previously found in the arguments")
 					}
 					break
 				}
@@ -402,19 +405,22 @@ func (flagSet *FlagSet) parseCommands() {
 		// If it's the last loop then
 		if i+1 == lenCmds {
 			cmd.indexTo = len(flagSet.argsRaw)
+			cmd.updatedBy = append(cmd.updatedBy, "last loop")
 			continue
 		}
 
 		// Otherwise search for the following command
 		for j := i + 1; j < lenCmds; j++ {
 			if flagSet.commands[j].indexFrom != -1 {
-				cmd.indexTo = j
+				cmd.indexTo = flagSet.commands[j].indexFrom
+				cmd.updatedBy = append(cmd.updatedBy, "next command")
 				break
 			}
 		}
 		// If it's not found then
 		if cmd.indexTo == -1 {
 			cmd.indexTo = len(flagSet.argsRaw)
+			cmd.updatedBy = append(cmd.updatedBy, "last command")
 		}
 	}
 
@@ -466,10 +472,12 @@ func (flagSet *FlagSet) parseArgs() {
 				newArg.commandID = cmd.id
 				newArg.indexFrom = cmd.indexFrom
 				newArg.indexTo = cmd.indexTo
+				newArg.updatedBy = append(newArg.updatedBy, "command argID matched argIndex")
 				break
 			} else {
 				if cmd.indexFrom < newArg.indexFrom && cmd.indexTo >= newArg.indexTo {
 					newArg.commandID = cmd.id
+					newArg.updatedBy = append(newArg.updatedBy, "in command range")
 					break
 				}
 			}
@@ -573,10 +581,10 @@ func (flagSet *FlagSet) parseArgs() {
 					// Iterate over the parent flag's arguments
 					for _, pArg := range parentFlag.args {
 						if pArg.name != "" && (flag.short == pArg.name || flag.long == pArg.name) {
-							flag.updatedBy = "1"
+							flag.updatedBy = append(flag.updatedBy, "matched argument")
 							flag.commandID = pArg.commandID
 							pArg.flagID = flag.id
-							pArg.updatedBy = "1"
+							pArg.updatedBy = append(pArg.updatedBy, "matched flag")
 							flag.args = append(flag.args, pArg)
 						}
 						// Don't break here for getting the last argument value (i.e. `-f=true -f=false`)
@@ -588,8 +596,8 @@ func (flagSet *FlagSet) parseArgs() {
 					// Flag has no parent so make sure the argument is not belong to any other command (i.e. `app command --foo`)
 					// Command arguments are handled previously
 					if arg.commandID == -1 && arg.name != "" && (flag.short == arg.name || flag.long == arg.name) {
-						flag.updatedBy = "2"
-						arg.updatedBy = "2"
+						flag.updatedBy = append(flag.updatedBy, "top level flag")
+						arg.updatedBy = append(arg.updatedBy, "top level arg")
 						arg.flagID = flag.id
 						flag.args = append(flag.args, arg)
 					}
