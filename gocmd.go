@@ -139,6 +139,8 @@ func (cmd *Cmd) usageItems(kind string, parentID int, level int) []*usageItem {
 			continue
 		}
 
+		level = len(flag.FieldIndex())
+
 		if flag.Kind() == "command" {
 			command := flag.Command()
 			result = append(result, &usageItem{
@@ -149,7 +151,6 @@ func (cmd *Cmd) usageItems(kind string, parentID int, level int) []*usageItem {
 				right:    flag.Description(),
 				level:    level,
 			})
-			level++
 			result = append(result, cmd.usageItems("", flag.ID(), level)...)
 		} else if flag.Kind() == "arg" {
 			arg := ""
