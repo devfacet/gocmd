@@ -1,6 +1,6 @@
 # gocmd
 
-[![Release][release-image]][release-url] [![Build Status][build-image]][build-url] [![Coverage][coverage-image]][coverage-url] [![GoDoc][doc-image]][doc-url]
+[![Release][release-image]][release-url] [![Build Status][build-image]][build-url] [![Coverage][coverage-image]][coverage-url] [![Report][report-image]][report-url] [![GoDoc][doc-image]][doc-url]
 
 A Go library for building command line applications.
 
@@ -128,6 +128,9 @@ For the full copyright and license information, please view the LICENSE.txt file
 
 [coverage-url]: https://coveralls.io/github/devfacet/gocmd?branch=master
 [coverage-image]: https://coveralls.io/repos/devfacet/gocmd/badge.svg?branch=master&service=github
+
+[report-url]: https://goreportcard.com/report/github.com/devfacet/gocmd
+[report-image]: https://goreportcard.com/badge/github.com/devfacet/gocmd
 
 [doc-url]: https://godoc.org/github.com/devfacet/gocmd
 [doc-image]: https://godoc.org/github.com/devfacet/gocmd?status.svg
