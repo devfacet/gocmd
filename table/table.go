@@ -74,9 +74,21 @@ func (t *Table) SetData(row, col int, val string) error {
 	return nil
 }
 
-// AddRow adds a row by the given row number and column values
-func (t *Table) AddRow(row int, cols ...string) error {
-	// Iterate rows and set data
+// SetRow sets a row by the given row number and column values
+func (t *Table) SetRow(row int, cols ...string) error {
+	// Iterate columns and set data
+	for i, v := range cols {
+		if err := t.SetData(row, i+1, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AddRow adds a row at the end of the table by the given column values
+func (t *Table) AddRow(cols ...string) error {
+	row := len(t.data) + 1
+	// Iterate columns and set data
 	for i, v := range cols {
 		if err := t.SetData(row, i+1, v); err != nil {
 			return err

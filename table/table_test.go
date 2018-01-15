@@ -76,16 +76,26 @@ func TestTable_SetData(t *testing.T) {
 	})
 }
 
+func TestTable_SetRow(t *testing.T) {
+	Convey("should set the given row", t, func() {
+		t, err := table.New(table.Options{})
+
+		So(err, ShouldBeNil)
+		So(t, ShouldNotBeNil)
+		So(t.SetRow(1, "foo", "bar"), ShouldBeNil)
+		So(t.SetRow(2, "1", "2"), ShouldBeNil)
+		So(t.SetRow(-1, "foo", "bar"), ShouldBeError, "invalid row")
+	})
+}
+
 func TestTable_AddRow(t *testing.T) {
 	Convey("should add the given row", t, func() {
 		t, err := table.New(table.Options{})
 
 		So(err, ShouldBeNil)
 		So(t, ShouldNotBeNil)
-
-		So(t.AddRow(1, "foo", "bar"), ShouldBeNil)
-		So(t.AddRow(2, "1", "2"), ShouldBeNil)
-		So(t.AddRow(-1, "foo", "bar"), ShouldBeError, "invalid row")
+		So(t.AddRow("foo", "bar"), ShouldBeNil)
+		So(t.AddRow("1", "2"), ShouldBeNil)
 	})
 }
 
@@ -94,8 +104,7 @@ func TestTable_FormatterData(t *testing.T) {
 		t, err := table.New(table.Options{})
 		So(err, ShouldBeNil)
 		So(t, ShouldNotBeNil)
-
-		So(t.AddRow(1, "foo", "bar"), ShouldBeNil)
+		So(t.AddRow("foo", "bar"), ShouldBeNil)
 		So(t.FormattedData(), ShouldEqual, "foo	bar\t\n")
 	})
 }
