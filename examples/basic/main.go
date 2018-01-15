@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	var flags = struct {
+	flags := struct {
 		Help      bool `short:"h" long:"help" default:"false" description:"Display usage"`
 		Version   bool `short:"v" long:"version" default:"false" description:"Display version"`
 		VersionEx bool `long:"vv" default:"false" description:"Display version (extended)"`
