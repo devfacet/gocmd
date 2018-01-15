@@ -17,12 +17,12 @@ type Options struct {
 }
 
 // New returns a table by the given options
-func New(o Options) (*Table, error) {
+func New(o Options) *Table {
 	// Init vars
 	t := Table{
 		data: o.Data,
 	}
-	return &t, nil
+	return &t
 }
 
 // Table represent a table
