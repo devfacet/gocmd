@@ -90,6 +90,6 @@ func TestCmd_usageContent(t *testing.T) {
 		So(cmd, ShouldNotBeNil)
 		usage := cmd.usageContent()
 		So(usage, ShouldNotBeEmpty)
-		So(usage, ShouldEqual, "\nUsage: test [options...] COMMAND [options...]\n\nTest\n\nOptions:\n  -f, --foo\t\tTest foo\n  -b       \t\tTest bar\n      --baz\t\tTest baz\n\nCommands:\n      qux      \tQux command\n          -f, --foo \tTest foo\n              --quux\tTest quux (default test)\n")
+		So(usage, ShouldEqual, "\nUsage: test [options...] COMMAND [options...]\n\nTest\n\nOptions:       \t\n  -f, --foo    \tTest foo                \t\n  -b           \tTest bar                \t\n      --baz    \tTest baz                \t\n               \t\nCommands:      \t\n  qux          \tQux command             \t\n    -f, --foo  \tTest foo                \t\n        --quux \tTest quux (default test)\t\n")
 	})
 }

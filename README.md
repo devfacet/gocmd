@@ -73,13 +73,13 @@ Usage: basic [options...] COMMAND [options...]
 
 A basic app
 
-Options:
-  -h, --help   		Display usage
-  -v, --version		Display version
-      --vv     		Display version (extended)
-
-Commands:
-  echo         	Print arguments
+Options:       	
+  -h, --help   	Display usage             	
+  -v, --version	Display version           	
+      --vv     	Display version (extended)	
+               	
+Commands:      	
+  echo         	Print arguments 
 
 ```
 

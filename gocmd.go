@@ -222,7 +222,7 @@ func (cmd *Cmd) usageContent() string {
 		t.AddRow("Options:")
 		for _, v := range usageItems {
 			if v.kind == "arg" && v.parentID == -1 {
-				t.AddRow(fmt.Sprintf("%s%s", strings.Repeat("  ", v.level), v.left), v.right)
+				t.AddRow(fmt.Sprintf("%s%s ", strings.Repeat("  ", v.level), v.left), v.right)
 			}
 		}
 		t.AddRow(" ")
@@ -235,7 +235,7 @@ func (cmd *Cmd) usageContent() string {
 			v := usageItems[i]
 			if v.kind == "command" || (v.kind == "arg" && v.parentID != -1) {
 				// Commands and their arguments are already sorted
-				t.AddRow(fmt.Sprintf("%s%s", strings.Repeat("  ", v.level), v.left), v.right)
+				t.AddRow(fmt.Sprintf("%s%s ", strings.Repeat("  ", v.level), v.left), v.right)
 			}
 		}
 	}
