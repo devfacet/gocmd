@@ -19,6 +19,7 @@ type Arg struct {
 	flagID    int
 	commandID int
 	parentID  int
+	valueID   int
 	indexFrom int
 	indexTo   int
 	updatedBy []string // for debug

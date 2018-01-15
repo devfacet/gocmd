@@ -459,6 +459,7 @@ func (flagSet *FlagSet) parseArgs() {
 			flagID:    -1,
 			commandID: -1,
 			parentID:  -1,
+			valueID:   -1,
 			indexFrom: argIndex,
 			indexTo:   argIndex + 1,
 		}
@@ -541,6 +542,7 @@ func (flagSet *FlagSet) parseArgs() {
 					nextArg.kind = "argval"
 					nextArg.value = arg.value
 					nextArg.parentID = arg.id
+					arg.valueID = nextArg.id
 				}
 			}
 		}
