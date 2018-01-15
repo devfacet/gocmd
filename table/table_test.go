@@ -99,7 +99,7 @@ func TestTable_AddRow(t *testing.T) {
 	})
 }
 
-func TestTable_FormatterData(t *testing.T) {
+func TestTable_FormattedData(t *testing.T) {
 	Convey("should return the formatted table data", t, func() {
 		t, err := table.New(table.Options{})
 		So(err, ShouldBeNil)
