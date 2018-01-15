@@ -254,6 +254,11 @@ func (flagSet *FlagSet) FlagArgs(name string) []string {
 		if flag.kind == "arg" {
 			result = append(result, v.value)
 		} else if flag.kind == "command" {
+			if v.kind == "argval" {
+				// Skip argument values since they are coupled with parent arguments
+				continue
+			}
+
 			arg := ""
 			if v.kind == "arg" {
 				arg = v.dash
