@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/devfacet/gocmd/table"
+
 	"github.com/devfacet/gocmd/flagset"
 )
 
@@ -189,7 +191,6 @@ func (cmd *Cmd) usageContent() string {
 	// Init vars
 	hasOpt := false
 	hasCmd := false
-	aligns := map[int]int{}
 	usageItems := cmd.usageItems("", -1, 0)
 	for _, v := range usageItems {
 		if v.kind == "arg" {
@@ -197,12 +198,11 @@ func (cmd *Cmd) usageContent() string {
 		} else if v.kind == "command" {
 			hasCmd = true
 		}
-		if a, ok := aligns[v.parentID]; !ok {
-			aligns[v.parentID] = len(v.left)
-		} else if len(v.left) > a {
-			aligns[v.parentID] = len(v.left)
+		if hasOpt && hasCmd {
+			continue
 		}
 	}
+	t := table.New(table.Options{})
 
 	// Header and description
 	usage := "\nUsage: " + cmd.name
@@ -219,30 +219,29 @@ func (cmd *Cmd) usageContent() string {
 
 	// Options
 	if hasOpt {
-		usage += "Options:\n"
+		t.AddRow("Options:")
 		for _, v := range usageItems {
-			align := fmt.Sprintf("%d", aligns[v.parentID])
 			if v.kind == "arg" && v.parentID == -1 {
-				usage += fmt.Sprintf("  %-"+align+"s\t\t%s\n", v.left, v.right)
+				t.AddRow(fmt.Sprintf("%s%s", strings.Repeat("  ", v.level), v.left), v.right)
 			}
 		}
-		usage += "\n"
+		t.AddRow(" ")
 	}
 
-	// Commands
 	if hasCmd {
-		usage += "Commands:\n"
+		t.AddRow("Commands:")
 		l := len(usageItems)
 		for i := 0; i < l; i++ {
 			v := usageItems[i]
-			space := strings.Repeat("  ", v.level*2)
-			align := fmt.Sprintf("%d", aligns[v.parentID])
-			if v.kind == "command" {
-				usage += fmt.Sprintf("  %s%-"+align+"s\t%s\n", space, v.left, v.right)
-			} else if v.kind == "arg" && v.parentID != -1 {
-				usage += fmt.Sprintf("  %s%-"+align+"s\t%s\n", space, v.left, v.right)
+			if v.kind == "command" || (v.kind == "arg" && v.parentID != -1) {
+				// Commands and their arguments are already sorted
+				t.AddRow(fmt.Sprintf("%s%s", strings.Repeat("  ", v.level), v.left), v.right)
 			}
 		}
+	}
+
+	if len(t.Data()) > 0 {
+		usage += t.FormattedData()
 	}
 
 	return usage
