@@ -81,6 +81,11 @@ func (cmd *Cmd) LookupFlag(name string) ([]string, bool) {
 	return nil, false
 }
 
+// FlagErrors returns the list of the flag errors
+func (cmd *Cmd) FlagErrors() []error {
+	return cmd.flagSet.Errors()
+}
+
 // PrintVersion prints version information
 func (cmd *Cmd) PrintVersion(extra bool) {
 	// Init vars
