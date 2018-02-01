@@ -2903,7 +2903,7 @@ func TestFlagSet_setFlag(t *testing.T) {
 		flagSet.flags = append(flagSet.flags, &flag)
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
-		So(flagSet.setFlag(0, ""), ShouldBeError, fmt.Errorf("invalid type . Supported types: %s", supportedFlagTypes))
+		So(flagSet.setFlag(0, ""), ShouldBeError, fmt.Errorf("invalid type . Supported types: %s", supportedFlagValueTypes))
 	})
 
 	Convey("should return error when the flag can't be set", t, func() {

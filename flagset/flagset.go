@@ -153,6 +153,11 @@ func New(options Options) (*FlagSet, error) {
 			}
 			continue
 		}
+
+		if flag.value == nil {
+			// Flag's value field is interface and it should not be nil
+			flagSet.unsetFlag(flag.id)
+		}
 	}
 
 	// Iterate over the flags and check the required arguments
@@ -654,8 +659,10 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 		}
 		if value == "true" {
 			fv.SetBool(true)
+			flag.value = true
 		} else if value == "false" {
 			fv.SetBool(false)
+			flag.value = false
 		}
 	case "float64":
 		if value != "" {
@@ -664,6 +671,7 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 				return fmt.Errorf("failed to parse '%s' as float64", value)
 			}
 			fv.SetFloat(v)
+			flag.value = v
 		}
 	case "int":
 		if value != "" {
@@ -672,6 +680,7 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 				return fmt.Errorf("failed to parse '%s' as int", value)
 			}
 			fv.SetInt(v)
+			flag.value = v
 		}
 	case "int64":
 		if value != "" {
@@ -680,6 +689,7 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 				return fmt.Errorf("failed to parse '%s' as int64", value)
 			}
 			fv.SetInt(v)
+			flag.value = v
 		}
 	case "uint":
 		if value != "" {
@@ -688,6 +698,7 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 				return fmt.Errorf("failed to parse '%s' as uint", value)
 			}
 			fv.SetUint(v)
+			flag.value = v
 		}
 	case "uint64":
 		if value != "" {
@@ -696,62 +707,80 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 				return fmt.Errorf("failed to parse '%s' as uint64", value)
 			}
 			fv.SetUint(v)
+			flag.value = v
 		}
 	case "string":
 		fv.SetString(value)
+		flag.value = value
 	case "[]bool":
 		if value != "true" && value != "false" {
 			return fmt.Errorf("failed to parse '%s' as bool", value)
 		}
+		var b reflect.Value
 		if value == "true" {
-			fv.Set(reflect.Append(fv, reflect.ValueOf(true)))
+			b = reflect.ValueOf(true)
 		} else if value == "false" {
-			fv.Set(reflect.Append(fv, reflect.ValueOf(false)))
+			b = reflect.ValueOf(false)
 		}
+		v := reflect.Append(fv, b)
+		fv.Set(v)
+		flag.value = v
 	case "[]float64":
 		if value != "" {
-			v, err := strconv.ParseFloat(value, 64)
+			f, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return fmt.Errorf("failed to parse '%s' as float64", value)
 			}
-			fv.Set(reflect.Append(fv, reflect.ValueOf(v)))
+			v := reflect.Append(fv, reflect.ValueOf(f))
+			fv.Set(v)
+			flag.value = v
 		}
 	case "[]int":
 		if value != "" {
-			v, err := strconv.ParseInt(value, 10, 32)
+			i, err := strconv.ParseInt(value, 10, 32)
 			if err != nil {
 				return fmt.Errorf("failed to parse '%s' as int", value)
 			}
-			fv.Set(reflect.Append(fv, reflect.ValueOf(int(v))))
+			v := reflect.Append(fv, reflect.ValueOf(int(i)))
+			fv.Set(v)
+			flag.value = v
 		}
 	case "[]int64":
 		if value != "" {
-			v, err := strconv.ParseInt(value, 10, 64)
+			i, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return fmt.Errorf("failed to parse '%s' as int64", value)
 			}
-			fv.Set(reflect.Append(fv, reflect.ValueOf(v)))
+			v := reflect.Append(fv, reflect.ValueOf(i))
+			fv.Set(v)
+			flag.value = v
 		}
 	case "[]uint":
 		if value != "" {
-			v, err := strconv.ParseUint(value, 10, 32)
+			u, err := strconv.ParseUint(value, 10, 32)
 			if err != nil {
 				return fmt.Errorf("failed to parse '%s' as uint", value)
 			}
-			fv.Set(reflect.Append(fv, reflect.ValueOf(uint(v))))
+			v := reflect.Append(fv, reflect.ValueOf(uint(u)))
+			fv.Set(v)
+			flag.value = v
 		}
 	case "[]uint64":
 		if value != "" {
-			v, err := strconv.ParseUint(value, 10, 64)
+			u, err := strconv.ParseUint(value, 10, 64)
 			if err != nil {
 				return fmt.Errorf("failed to parse '%s' as uint64", value)
 			}
-			fv.Set(reflect.Append(fv, reflect.ValueOf(v)))
+			v := reflect.Append(fv, reflect.ValueOf(u))
+			fv.Set(v)
+			flag.value = v
 		}
 	case "[]string":
-		fv.Set(reflect.Append(fv, reflect.ValueOf(value)))
+		v := reflect.Append(fv, reflect.ValueOf(value))
+		fv.Set(v)
+		flag.value = v
 	default:
-		return fmt.Errorf("invalid type %s. Supported types: %s", flag.valueType, supportedFlagTypes)
+		return fmt.Errorf("invalid type %s. Supported types: %s", flag.valueType, supportedFlagValueTypes)
 	}
 
 	return nil
@@ -779,40 +808,61 @@ func (flagSet *FlagSet) unsetFlag(id int) error {
 	case "bool":
 		var v bool
 		fv.SetBool(v)
+		flag.value = v
 	case "float64":
 		var v float64
 		fv.SetFloat(v)
+		flag.value = v
 	case "int":
 		var v int64
 		fv.SetInt(v)
+		flag.value = v
 	case "int64":
 		var v int64
 		fv.SetInt(v)
+		flag.value = v
 	case "uint":
 		var v uint64
 		fv.SetUint(v)
+		flag.value = v
 	case "uint64":
 		var v uint64
 		fv.SetUint(v)
+		flag.value = v
 	case "string":
 		var v string
 		fv.SetString(v)
+		flag.value = v
 	case "[]bool":
-		fv.Set(reflect.Zero(reflect.TypeOf([]bool{})))
+		v := reflect.Zero(reflect.TypeOf([]bool{}))
+		fv.Set(v)
+		flag.value = v
 	case "[]float64":
-		fv.Set(reflect.Zero(reflect.TypeOf([]float64{})))
+		v := reflect.Zero(reflect.TypeOf([]float64{}))
+		fv.Set(v)
+		flag.value = v
 	case "[]int":
-		fv.Set(reflect.Zero(reflect.TypeOf([]int{})))
+		v := reflect.Zero(reflect.TypeOf([]int{}))
+		fv.Set(v)
+		flag.value = v
 	case "[]int64":
-		fv.Set(reflect.Zero(reflect.TypeOf([]int64{})))
+		v := reflect.Zero(reflect.TypeOf([]int64{}))
+		fv.Set(v)
+		flag.value = v
 	case "[]uint":
-		fv.Set(reflect.Zero(reflect.TypeOf([]uint{})))
+		v := reflect.Zero(reflect.TypeOf([]uint{}))
+		fv.Set(v)
+		flag.value = v
 	case "[]uint64":
-		fv.Set(reflect.Zero(reflect.TypeOf([]uint64{})))
+		v := reflect.Zero(reflect.TypeOf([]uint64{}))
+		fv.Set(v)
+		flag.value = v
 	case "[]string":
-		fv.Set(reflect.Zero(reflect.TypeOf([]string{})))
+		v := reflect.Zero(reflect.TypeOf([]string{}))
+		fv.Set(v)
+		flag.value = v
 	default:
-		return fmt.Errorf("invalid type %s. Supported types: %s", flag.valueType, supportedFlagTypes)
+		return fmt.Errorf("invalid type %s. Supported types: %s", flag.valueType, supportedFlagValueTypes)
 	}
 
 	return nil
@@ -884,6 +934,7 @@ func structFieldToFlag(sf structField) Flag {
 		valueDefault: strings.TrimSpace(sf.field.Tag.Get("default")),
 		valueType:    sf.field.Type.String(),
 		valueBy:      "",
+		value:        nil,
 		kind:         "arg",
 		fieldIndex:   nil,
 		parentIndex:  nil,

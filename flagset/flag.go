@@ -23,6 +23,22 @@ var (
 		"[]string",
 		"struct",
 	}
+	supportedFlagValueTypes = []string{
+		"bool",
+		"float64",
+		"int",
+		"int64",
+		"uint",
+		"uint64",
+		"string",
+		"[]bool",
+		"[]float64",
+		"[]int",
+		"[]int64",
+		"[]uint",
+		"[]uint64",
+		"[]string",
+	}
 )
 
 // Flag represents a flag
@@ -39,6 +55,7 @@ type Flag struct {
 	valueDefault string
 	valueType    string
 	valueBy      string
+	value        interface{}
 	kind         string
 	fieldIndex   []int // for reflect
 	parentIndex  []int // for reflect
@@ -107,6 +124,11 @@ func (f *Flag) ValueType() string {
 // ValueBy returns the value by of the flag
 func (f *Flag) ValueBy() string {
 	return f.valueBy
+}
+
+// Value returns the value of the flag
+func (f *Flag) Value() interface{} {
+	return f.value
 }
 
 // Kind returns the kind of the flag
