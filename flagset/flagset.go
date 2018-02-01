@@ -31,7 +31,9 @@ func New(options Options) (*FlagSet, error) {
 	if options.Flags == nil {
 		return nil, fmt.Errorf("flags are required")
 	} else if !strings.HasPrefix(fmt.Sprintf("%T", options.Flags), "*struct") {
-		return nil, fmt.Errorf("flags must be a struct pointer")
+		if options.Flags == nil || reflect.ValueOf(options.Flags).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(options.Flags)).Kind() != reflect.Struct {
+			return nil, fmt.Errorf("flags must be a struct pointer")
+		}
 	}
 
 	if options.Args == nil {
