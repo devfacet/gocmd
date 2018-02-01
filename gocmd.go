@@ -83,6 +83,15 @@ func (cmd *Cmd) LookupFlag(name string) ([]string, bool) {
 	return nil, false
 }
 
+// FlagValue returns the flag value by the given flag name
+func (cmd *Cmd) FlagValue(name string) interface{} {
+	flag := cmd.flagSet.FlagByName(name)
+	if flag != nil {
+		return flag.Value()
+	}
+	return nil
+}
+
 // FlagErrors returns the list of the flag errors
 func (cmd *Cmd) FlagErrors() []error {
 	return cmd.flagSet.Errors()
