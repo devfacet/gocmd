@@ -249,6 +249,35 @@ func (flagSet *FlagSet) FlagByName(name string) *Flag {
 	return result
 }
 
+// FlagByArg returns a flag by the given argument name or returns nil if it doesn't exist
+// Nested commands are separated by dot (i.e. Foo.Bar)
+func (flagSet *FlagSet) FlagByArg(arg, command string) *Flag {
+	if arg == "" {
+		return nil
+	}
+
+	// Init vars
+	var result *Flag
+
+	// Check the command
+	parentID := -1
+	if command != "" {
+		if f := flagSet.FlagByName(command); f != nil {
+			parentID = f.id
+		}
+	}
+
+	// Iterate over the flags
+	for _, v := range flagSet.flags {
+		if v.kind == "arg" && v.parentID == parentID && (v.short == arg || v.long == arg) {
+			result = v
+			break
+		}
+	}
+
+	return result
+}
+
 // FlagArgs returns the flag arguments those exist in the argument list
 // If the flag is an argument then it return it's values (i.e. [foo bar] for `-f=foo -f=bar`)
 // If it's a command then it returns the command name and the rest of the arguments (i.e. [command -f=true --bar=baz qux] for `command -f --bar=baz qux`).
