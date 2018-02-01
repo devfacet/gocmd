@@ -27,6 +27,10 @@ type Options struct {
 	Description string
 	// Flags hold user defined command line arguments and commands
 	Flags interface{}
+	// AutoHelp prints the usage content
+	AutoHelp bool
+	// AutoVersion prints the version content
+	AutoVersion bool
 }
 
 // New returns a command by the given options
@@ -44,6 +48,55 @@ func New(o Options) (*Cmd, error) {
 		cmd.flagSet, err = flagset.New(flagset.Options{Flags: o.Flags})
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	// Auto version
+	if o.AutoVersion {
+		ver := false
+		if f := cmd.flagSet.FlagByArg("v", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				ver = true
+			}
+		}
+		if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				ver = true
+			}
+		}
+		verEx := false
+		if f := cmd.flagSet.FlagByArg("vv", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				verEx = true
+			}
+		}
+
+		if ver || verEx {
+			cmd.PrintVersion(verEx)
+			os.Exit(0)
+		}
+	}
+
+	// Auto help
+	if o.AutoHelp {
+		help := false
+		if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				help = true
+			}
+		}
+		if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				help = true
+			}
+		}
+		if len(os.Args) == 1 {
+			help = true
+		}
+
+		if help {
+			cmd.PrintUsage()
+			os.Exit(0)
 		}
 	}
 
