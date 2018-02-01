@@ -74,7 +74,7 @@ func (cmd *Cmd) Description() string {
 	return cmd.description
 }
 
-// LookupFlag returns the values of the flag by the given name
+// LookupFlag returns the flag arguments by the given flag name
 func (cmd *Cmd) LookupFlag(name string) ([]string, bool) {
 	flag := cmd.flagSet.FlagByName(name)
 	if flag != nil {
