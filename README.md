@@ -8,6 +8,7 @@ A Go library for building command line applications.
 
 - Advanced command line arguments handling
 	- Short and long command line arguments
+	- Support for environment variables
 	- Subcommand handling
 	- Well formatted usage printing
 - Output tables in the terminal
