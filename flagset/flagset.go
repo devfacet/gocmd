@@ -116,6 +116,10 @@ func New(options Options) (*FlagSet, error) {
 
 	// Iterate over the flags and update their values
 	for _, flag := range flagSet.flags {
+		if flag.kind != "arg" {
+			continue // only arguments
+		}
+
 		if flag.valueBy == "arg" {
 			// Check errors
 			for _, arg := range flag.args {
@@ -125,23 +129,29 @@ func New(options Options) (*FlagSet, error) {
 					err := flagSet.unsetFlag(flag.id)
 					if err != nil {
 						flag.err = err
-						continue
+						break
 					}
 				}
 			}
 			continue
-		} else if ev, ok := os.LookupEnv(flag.env); ok {
-			flag.valueBy = "env"
-			if err := flagSet.setFlag(flag.id, ev); err != nil {
-				flag.err = err
+		}
+
+		if flag.env != "" {
+			if ev, ok := os.LookupEnv(flag.env); ok {
+				flag.valueBy = "env"
+				if err := flagSet.setFlag(flag.id, ev); err != nil {
+					flag.err = err
+				}
 				continue
 			}
-		} else if flag.valueDefault != "" {
+		}
+
+		if flag.valueDefault != "" {
 			flag.valueBy = "default"
 			if err := flagSet.setFlag(flag.id, flag.valueDefault); err != nil {
 				flag.err = err
-				continue
 			}
+			continue
 		}
 	}
 
