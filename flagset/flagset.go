@@ -204,6 +204,11 @@ func New(o Options) (*FlagSet, error) {
 				}
 			}
 
+			// Check the flag value
+			if flag.valueBy == "default" || flag.valueBy == "env" {
+				continue
+			}
+
 			// Prepare error
 			eMsg := fmt.Sprintf("argument %s is required", flag.FormattedArg())
 			if command != "" {
