@@ -41,6 +41,7 @@ func New(o Options) (*Cmd, error) {
 		version:     o.Version,
 		description: o.Description,
 		flags:       o.Flags,
+		flagSet:     &flagset.FlagSet{},
 	}
 
 	if o.Flags != nil {
@@ -49,54 +50,54 @@ func New(o Options) (*Cmd, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	// Auto version
-	if o.AutoVersion {
-		ver := false
-		if f := cmd.flagSet.FlagByArg("v", ""); f != nil {
-			if v, ok := f.Value().(bool); ok && v {
-				ver = true
+		// Auto version
+		if o.AutoVersion {
+			ver := false
+			if f := cmd.flagSet.FlagByArg("v", ""); f != nil {
+				if v, ok := f.Value().(bool); ok && v {
+					ver = true
+				}
+			}
+			if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
+				if v, ok := f.Value().(bool); ok && v {
+					ver = true
+				}
+			}
+			verEx := false
+			if f := cmd.flagSet.FlagByArg("vv", ""); f != nil {
+				if v, ok := f.Value().(bool); ok && v {
+					verEx = true
+				}
+			}
+
+			if ver || verEx {
+				cmd.PrintVersion(verEx)
+				os.Exit(0)
 			}
 		}
-		if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
-			if v, ok := f.Value().(bool); ok && v {
-				ver = true
-			}
-		}
-		verEx := false
-		if f := cmd.flagSet.FlagByArg("vv", ""); f != nil {
-			if v, ok := f.Value().(bool); ok && v {
-				verEx = true
-			}
-		}
 
-		if ver || verEx {
-			cmd.PrintVersion(verEx)
-			os.Exit(0)
-		}
-	}
-
-	// Auto help
-	if o.AutoHelp {
-		help := false
-		if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
-			if v, ok := f.Value().(bool); ok && v {
+		// Auto help
+		if o.AutoHelp {
+			help := false
+			if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
+				if v, ok := f.Value().(bool); ok && v {
+					help = true
+				}
+			}
+			if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
+				if v, ok := f.Value().(bool); ok && v {
+					help = true
+				}
+			}
+			if len(os.Args) == 1 {
 				help = true
 			}
-		}
-		if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
-			if v, ok := f.Value().(bool); ok && v {
-				help = true
-			}
-		}
-		if len(os.Args) == 1 {
-			help = true
-		}
 
-		if help {
-			cmd.PrintUsage()
-			os.Exit(0)
+			if help {
+				cmd.PrintUsage()
+				os.Exit(0)
+			}
 		}
 	}
 
@@ -193,10 +194,6 @@ type usageItem struct {
 
 // usageItems returns the list of the usage items
 func (cmd *Cmd) usageItems(kind string, parentID int, level int) []*usageItem {
-	if cmd.flagSet == nil {
-		return nil
-	}
-
 	// Init vars
 	var result []*usageItem
 
