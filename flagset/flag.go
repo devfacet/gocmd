@@ -5,6 +5,8 @@
 
 package flagset
 
+import "fmt"
+
 var (
 	supportedFlagTypes = []string{
 		"bool",
@@ -84,6 +86,17 @@ func (f *Flag) Short() string {
 // Long returns the long argument of the flag
 func (f *Flag) Long() string {
 	return f.long
+}
+
+// FormattedArg returns the formatted argument of the flag
+func (f *Flag) FormattedArg() string {
+	arg := ""
+	if f.short != "" {
+		arg = fmt.Sprintf("%s%s", "-", f.short)
+	} else if f.long != "" {
+		arg = fmt.Sprintf("%s%s", "--", f.long)
+	}
+	return arg
 }
 
 // Command returns the command of the flag
