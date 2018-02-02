@@ -4,6 +4,7 @@ set -e
 
 # Requirements
 go get github.com/golang/lint/golint
+go get github.com/smartystreets/goconvey
 
 # Format, lint, check
 OUT=`gofmt -l . | (grep -v '^vendor\/' || true)`; if [ "$OUT" ]; then echo "gofmt: $OUT"; exit 1; fi
