@@ -52,6 +52,7 @@ type Flag struct {
 	command      string
 	description  string
 	required     bool
+	global       bool
 	env          string
 	delimiter    string
 	valueDefault string
@@ -112,6 +113,11 @@ func (f *Flag) Description() string {
 // Required returns whether the flag is required or not
 func (f *Flag) Required() bool {
 	return f.required
+}
+
+// Global returns whether the flag is global or not
+func (f *Flag) Global() bool {
+	return f.global
 }
 
 // Env returns the environment variable name of the flag

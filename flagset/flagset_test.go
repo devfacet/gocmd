@@ -499,6 +499,95 @@ func TestNew(t *testing.T) {
 		So(flags06.CommandQux.Baz, ShouldEqual, true)
 	})
 
+	Convey("should return correct flag values (global)", t, func() {
+		flags01 := struct {
+			Global     bool `short:"g" long:"global" global:"true"`
+			CommandFoo struct {
+				Bar bool `short:"b" long:"bar"`
+			} `command:"foo"`
+		}{}
+		args := []string{"./app", "-g"}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags01, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags01.Global, ShouldEqual, true)
+
+		flags02 := struct {
+			Global     bool `short:"g" long:"global" global:"true"`
+			CommandFoo struct {
+				Bar bool `short:"b" long:"bar"`
+			} `command:"foo"`
+		}{}
+		args = []string{"./app", "foo", "-b", "-g"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags02, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags02.Global, ShouldEqual, true)
+
+		flags03 := struct {
+			Global     bool `short:"g" long:"global" global:"true"`
+			CommandFoo struct {
+				Bar bool `short:"b" long:"bar"`
+			} `command:"foo"`
+		}{}
+		args = []string{"./app", "foo", "-b", "-g", "true"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags03, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags03.Global, ShouldEqual, true)
+
+		flags04 := struct {
+			Global     bool `short:"g" long:"global" global:"true"`
+			CommandFoo struct {
+				Bar bool `short:"b" long:"bar"`
+			} `command:"foo"`
+		}{}
+		args = []string{"./app", "foo", "-g"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags04, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags04.Global, ShouldEqual, true)
+
+		flags05 := struct {
+			Global     bool `short:"g" long:"global" global:"true"`
+			CommandFoo struct {
+				Bar string `short:"b" long:"bar"`
+			} `command:"foo"`
+		}{}
+		args = []string{"./app", "foo", "-b", "baz", "-g"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags05, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags05.Global, ShouldEqual, true)
+
+		flags06 := struct {
+			Global     bool `short:"g" long:"global" global:"true"`
+			CommandFoo struct {
+				Bar bool `short:"b" long:"hello" global:"true"`
+				Baz bool `long:"baz" global:"true"`
+			} `command:"foo"`
+			CommandQux struct {
+			} `command:"qux" global:"true"`
+		}{}
+		args = []string{"./app", "foo", "-b", "-g"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags06, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors := flagSet.Errors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -b can't be global"))
+		So(flagErrors, ShouldContain, errors.New("argument --baz can't be global"))
+		So(flagErrors, ShouldContain, errors.New("command qux can't be global"))
+		So(flags06.Global, ShouldEqual, true)
+		So(flags06.CommandFoo.Bar, ShouldEqual, false)
+		So(flags06.CommandFoo.Baz, ShouldEqual, false)
+	})
+
 	Convey("should return correct flag values (env)", t, func() {
 		flags01 := struct {
 			Env string `short:"e" long:"env" env:"GOPATH"`

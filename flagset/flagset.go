@@ -26,26 +26,26 @@ type Options struct {
 }
 
 // New returns a flag set by the given options
-func New(options Options) (*FlagSet, error) {
+func New(o Options) (*FlagSet, error) {
 	// Check the options
-	if options.Flags == nil {
+	if o.Flags == nil {
 		return nil, fmt.Errorf("flags are required")
-	} else if !strings.HasPrefix(fmt.Sprintf("%T", options.Flags), "*struct") {
-		if options.Flags == nil || reflect.ValueOf(options.Flags).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(options.Flags)).Kind() != reflect.Struct {
+	} else if !strings.HasPrefix(fmt.Sprintf("%T", o.Flags), "*struct") {
+		if o.Flags == nil || reflect.ValueOf(o.Flags).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(o.Flags)).Kind() != reflect.Struct {
 			return nil, fmt.Errorf("flags must be a struct pointer")
 		}
 	}
 
-	if options.Args == nil {
-		options.Args = os.Args // default
+	if o.Args == nil {
+		o.Args = os.Args // default
 	}
 
 	// Init vars
 	flagSet := FlagSet{
-		flagsRaw: options.Flags,
-		argsRaw:  make([]string, len(options.Args)),
+		flagsRaw: o.Flags,
+		argsRaw:  make([]string, len(o.Args)),
 	}
-	copy(flagSet.argsRaw, options.Args) // take a copy
+	copy(flagSet.argsRaw, o.Args) // take a copy
 
 	// Parse flags and args
 	if flagSet.flagsRaw != nil {
@@ -56,6 +56,23 @@ func New(options Options) (*FlagSet, error) {
 		}
 	}
 	flagSet.parseArgs()
+
+	// Iterate over the flags and check the global arguments
+	for _, flag := range flagSet.flags {
+		if !flag.global {
+			continue // skip non global flags
+		}
+
+		if flag.kind == "command" {
+			flag.err = fmt.Errorf("command %s can't be global", flag.command)
+			continue
+		}
+
+		if flag.kind == "arg" && flag.parentID > -1 {
+			flag.err = fmt.Errorf("argument %s can't be global", flag.FormattedArg())
+			continue
+		}
+	}
 
 	// Iterate over the flags and apply values to the fields
 	for _, flag := range flagSet.flags {
@@ -120,20 +137,21 @@ func New(options Options) (*FlagSet, error) {
 			continue // only arguments
 		}
 
+		// Check the flag error
+		if flag.err != nil {
+			flagSet.unsetFlag(flag.id)
+			continue
+		}
+
 		if flag.valueBy == "arg" {
-			// Check errors
+			// Check the argument errors
 			for _, arg := range flag.args {
 				// If there is an argument error then
 				if arg.err != nil {
-					// Unset the flag value
-					err := flagSet.unsetFlag(flag.id)
-					if err != nil {
-						flag.err = err
-						break
-					}
+					flagSet.unsetFlag(flag.id)
 				}
 			}
-			continue
+			continue // skip the rest since argument overrides env and default values
 		}
 
 		if flag.env != "" {
@@ -187,13 +205,7 @@ func New(options Options) (*FlagSet, error) {
 			}
 
 			// Prepare error
-			arg := ""
-			if flag.short != "" {
-				arg = fmt.Sprintf("%s%s", "-", flag.short)
-			} else if flag.long != "" {
-				arg = fmt.Sprintf("%s%s", "--", flag.long)
-			}
-			eMsg := fmt.Sprintf("argument %s is required", arg)
+			eMsg := fmt.Sprintf("argument %s is required", flag.FormattedArg())
 			if command != "" {
 				eMsg = fmt.Sprintf("%s for %s command", eMsg, command)
 			}
@@ -302,6 +314,7 @@ func (flagSet *FlagSet) FlagArgs(name string) []string {
 		} else if flag.kind == "command" {
 			if v.kind == "argval" {
 				// Skip argument values since they are coupled with parent arguments
+				// Note that argument values are not added into the flag arguments (see parseArgs method)
 				continue
 			}
 
@@ -614,7 +627,36 @@ func (flagSet *FlagSet) parseArgs() {
 				if cmd.argID != -1 && cmd.flagID == flag.id {
 					for _, arg := range flagSet.args {
 						if arg.commandID == cmd.id {
-							flag.args = append(flag.args, arg)
+
+							// Arguments those have not flag (flagID: -1) but have a command (commandID > 0) might be global
+							if arg.flagID == -1 {
+								if f := flagSet.FlagByArg(arg.name, ""); f != nil && f.global {
+									// Update the argument and it's flag
+									f.updatedBy = append(flag.updatedBy, "global argument")
+									f.args = append(f.args, arg)
+									arg.updatedBy = append(arg.updatedBy, "global argument")
+									arg.flagID = f.id
+									arg.commandID = -1
+									// Check the value argument
+									if arg.valueID > -1 {
+										for _, a := range flagSet.args {
+											if a.id == arg.valueID {
+												a.updatedBy = append(a.updatedBy, "global argument")
+												a.flagID = f.id
+												a.commandID = -1
+												break
+											}
+										}
+									}
+									continue
+								}
+							}
+
+							// Otherwise add argument to it's command unless it's an argument value (see FlagArgs method)
+							if arg.parentID == -1 {
+								flag.updatedBy = append(flag.updatedBy, "command argument")
+								flag.args = append(flag.args, arg)
+							}
 						}
 					}
 					break
@@ -625,10 +667,9 @@ func (flagSet *FlagSet) parseArgs() {
 
 		// Args
 		if flag.kind == "arg" {
-
 			// If the flag has parent then
 			if flag.parentID != -1 {
-				// Make sure the argument comes after the parent comand and before another command (i.e. `app command1 --foo command2 --foo`)
+				// Make sure the argument comes after the parent command and before another command (i.e. `app command1 --foo command2 --foo`)
 				parentFlag := flagSet.lookupFlagByIndex(flag.parentIndex)
 				if parentFlag != nil && parentFlag.args != nil {
 					// Iterate over the parent flag's arguments
@@ -922,11 +963,6 @@ func structToFlags(value interface{}) ([]*Flag, []error) {
 		result = append(result, &flag)
 	}
 
-	// Check the flag arguments
-	if errs := checkFlags(result); errs != nil {
-		return nil, errs
-	}
-
 	// Iterate over the flags and set parent ids
 	for _, v := range result {
 		if v.parentIndex != nil {
@@ -936,6 +972,11 @@ func structToFlags(value interface{}) ([]*Flag, []error) {
 				}
 			}
 		}
+	}
+
+	// Check the flag arguments
+	if errs := checkFlags(result); errs != nil {
+		return nil, errs
 	}
 
 	return result, nil
@@ -958,6 +999,7 @@ func structFieldToFlag(sf structField) Flag {
 		command:      strings.TrimSpace(sf.field.Tag.Get("command")),
 		description:  strings.TrimSpace(sf.field.Tag.Get("description")),
 		required:     false,
+		global:       false,
 		env:          strings.TrimSpace(sf.field.Tag.Get("env")),
 		delimiter:    sf.field.Tag.Get("delimiter"),
 		valueDefault: strings.TrimSpace(sf.field.Tag.Get("default")),
@@ -972,8 +1014,11 @@ func structFieldToFlag(sf structField) Flag {
 		args:         nil,
 		err:          nil,
 	}
-	if r := sf.field.Tag.Get("required"); r == "true" {
+	if v := sf.field.Tag.Get("required"); v == "true" {
 		flag.required = true
+	}
+	if v := sf.field.Tag.Get("global"); v == "true" {
+		flag.global = true
 	}
 
 	// Cleanup args

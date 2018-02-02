@@ -110,6 +110,20 @@ func TestFlag_Required(t *testing.T) {
 	})
 }
 
+func TestFlag_Global(t *testing.T) {
+	Convey("should return the global value of the flag", t, func() {
+		flags := struct {
+			Test string `short:"f" global:"true"`
+		}{}
+		flagSet, err := New(Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Test")
+		So(flag, ShouldNotBeNil)
+		So(flag.Global(), ShouldEqual, true)
+	})
+}
+
 func TestFlag_Env(t *testing.T) {
 	Convey("should return the env value of the flag", t, func() {
 		flags := struct {
