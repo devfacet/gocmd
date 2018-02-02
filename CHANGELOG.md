@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2.0 (2018-02-02)
+
+- Improve error handling for required flags
+- Add env value to usage content
+- Implement global arguments
+- Add Flag.FormattedArg method
+
 ## v2.1.0 (2018-01-31)
 
 - Implement auto usage and version printing
