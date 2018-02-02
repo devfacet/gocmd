@@ -228,8 +228,27 @@ func (cmd *Cmd) usageItems(kind string, parentID int, level int) []*usageItem {
 				arg = fmt.Sprintf("    --%s", flag.Long())
 			}
 			right := flag.Description()
+			def := false
+			env := false
 			if flag.ValueDefault() != "" && flag.ValueDefault() != "false" {
-				right = fmt.Sprintf("%s (default %s)", right, flag.ValueDefault())
+				def = true
+			}
+			if flag.Env() != "" {
+				env = true
+			}
+			if def || env {
+				right = fmt.Sprintf("%s (default", right)
+			}
+			if def {
+				right = fmt.Sprintf("%s %s", right, flag.ValueDefault())
+				if env {
+					right = fmt.Sprintf("%s - override $%s", right, flag.Env())
+				}
+			} else if env {
+				right = fmt.Sprintf("%s $%s", right, flag.Env())
+			}
+			if def || env {
+				right = fmt.Sprintf("%s)", right)
 			}
 			result = append(result, &usageItem{
 				kind:     "arg",
