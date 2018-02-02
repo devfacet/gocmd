@@ -95,6 +95,58 @@ func TestCmd_Description(t *testing.T) {
 	})
 }
 
+func TestCmd_LookupFlag(t *testing.T) {
+	Convey("should lookup a flag", t, func() {
+		resetArgs()
+		os.Args = append(os.Args, "-f=true")
+
+		cmd, err := gocmd.New(gocmd.Options{
+			Flags: &struct {
+				Foo bool `short:"f" default:"true"`
+			}{},
+		})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		v, ok := cmd.LookupFlag("Foo")
+		So(v, ShouldContain, "true")
+		So(ok, ShouldEqual, true)
+	})
+}
+
+func TestCmd_FlagValue(t *testing.T) {
+	Convey("should return the correct flag value", t, func() {
+		resetArgs()
+		os.Args = append(os.Args, "-f=true")
+
+		cmd, err := gocmd.New(gocmd.Options{
+			Flags: &struct {
+				Foo bool `short:"f" default:"true"`
+			}{},
+		})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		v, ok := cmd.FlagValue("Foo").(bool)
+		So(v, ShouldEqual, true)
+		So(ok, ShouldEqual, true)
+	})
+}
+
+func TestCmd_FlagErrors(t *testing.T) {
+	Convey("should return the flag errors", t, func() {
+		cmd, err := gocmd.New(gocmd.Options{
+			Flags: &struct {
+				Foo struct {
+				} `global:"true"`
+			}{},
+		})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		flagErrors := cmd.FlagErrors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("command foo can't be global"))
+	})
+}
+
 func ExampleCmd_PrintVersion() {
 	cmd, _ := gocmd.New(gocmd.Options{
 		Version: "1.0.0",
