@@ -22,7 +22,7 @@ func TestFlagSet(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors := flagSet.Errors()
 		So(flagErrors, ShouldBeNil)
-		f := flagSet.lookupFlagByID(0)
+		f := flagSet.flagByID(0)
 		So(f, ShouldBeNil)
 
 		flags02 := struct {
@@ -33,7 +33,7 @@ func TestFlagSet(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldBeNil)
-		f = flagSet.lookupFlagByID(0)
+		f = flagSet.flagByID(0)
 		So(f, ShouldBeNil)
 	})
 
@@ -530,7 +530,7 @@ func TestFlagSet(t *testing.T) {
 			},
 		}
 		for _, v := range flagTests {
-			f := flagSet.lookupFlagByID(v.id)
+			f := flagSet.flagByID(v.id)
 
 			So(f, ShouldNotBeNil)
 			So(f.id, ShouldEqual, v.id)
@@ -641,13 +641,13 @@ func TestFlagSet(t *testing.T) {
 	})
 }
 
-func TestFlagSet_lookupFlagByID(t *testing.T) {
+func TestFlagSet_flagByID(t *testing.T) {
 	Convey("should return nil when the flag id is not valid", t, func() {
 		flags := struct{}{}
 		flagSet, err := New(Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
-		So(flagSet.lookupFlagByID(-1), ShouldBeNil)
+		So(flagSet.flagByID(-1), ShouldBeNil)
 	})
 
 	Convey("should return nil when the flag id doesn't exist", t, func() {
@@ -655,17 +655,17 @@ func TestFlagSet_lookupFlagByID(t *testing.T) {
 		flagSet, err := New(Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
-		So(flagSet.lookupFlagByID(0), ShouldBeNil)
+		So(flagSet.flagByID(0), ShouldBeNil)
 	})
 }
 
-func TestFlagSet_lookupFlagByIndex(t *testing.T) {
+func TestFlagSet_flagByIndex(t *testing.T) {
 	Convey("should return nil when the flag index is nil", t, func() {
 		flags := struct{}{}
 		flagSet, err := New(Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
-		So(flagSet.lookupFlagByIndex(nil), ShouldBeNil)
+		So(flagSet.flagByIndex(nil), ShouldBeNil)
 	})
 
 	Convey("should return nil when the flag index doesn't exist", t, func() {
@@ -673,7 +673,7 @@ func TestFlagSet_lookupFlagByIndex(t *testing.T) {
 		flagSet, err := New(Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
-		So(flagSet.lookupFlagByIndex([]int{1}), ShouldBeNil)
+		So(flagSet.flagByIndex([]int{1}), ShouldBeNil)
 	})
 }
 

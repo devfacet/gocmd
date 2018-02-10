@@ -193,7 +193,7 @@ func New(o Options) (*FlagSet, error) {
 			// Check the parent flag
 			command := ""
 			if flag.parentIndex != nil {
-				parentFlag := flagSet.lookupFlagByIndex(flag.parentIndex)
+				parentFlag := flagSet.flagByIndex(flag.parentIndex)
 				if parentFlag != nil {
 					command = parentFlag.command
 				}
@@ -364,8 +364,8 @@ func (flagSet *FlagSet) Errors() []error {
 	return result
 }
 
-// lookupFlagByID returns a flag by the given id or returns nil if it doesn't exist
-func (flagSet *FlagSet) lookupFlagByID(id int) *Flag {
+// flagByID returns a flag by the given id or returns nil if it doesn't exist
+func (flagSet *FlagSet) flagByID(id int) *Flag {
 	if id < 0 {
 		return nil
 	}
@@ -377,8 +377,8 @@ func (flagSet *FlagSet) lookupFlagByID(id int) *Flag {
 	return nil
 }
 
-// lookupFlagByIndex returns a flag by the given field index or returns nil if it doesn't exist
-func (flagSet *FlagSet) lookupFlagByIndex(index []int) *Flag {
+// flagByIndex returns a flag by the given field index or returns nil if it doesn't exist
+func (flagSet *FlagSet) flagByIndex(index []int) *Flag {
 	if index == nil {
 		return nil
 	}
@@ -413,7 +413,7 @@ func (flagSet *FlagSet) parseCommands() {
 			lookup[flag.id] = cnt // for command id by flag id
 
 			if flag.parentIndex != nil {
-				parentFlag := flagSet.lookupFlagByIndex(flag.parentIndex)
+				parentFlag := flagSet.flagByIndex(flag.parentIndex)
 				if parentFlag != nil {
 					if pid, ok := lookup[parentFlag.id]; ok {
 						newCmd.parentID = pid // it must exist since nested commands come after parent commands
@@ -676,7 +676,7 @@ func (flagSet *FlagSet) parseArgs() {
 			// If the flag has parent then
 			if flag.parentID != -1 {
 				// Make sure the argument comes after the parent command and before another command (i.e. `app command1 --foo command2 --foo`)
-				parentFlag := flagSet.lookupFlagByIndex(flag.parentIndex)
+				parentFlag := flagSet.flagByIndex(flag.parentIndex)
 				if parentFlag != nil && parentFlag.args != nil {
 					// Iterate over the parent flag's arguments
 					for _, pArg := range parentFlag.args {
@@ -717,7 +717,7 @@ func (flagSet *FlagSet) setFlag(id int, value string) error {
 	}
 
 	// Check the flag
-	flag := flagSet.lookupFlagByID(id)
+	flag := flagSet.flagByID(id)
 	if flag == nil {
 		return fmt.Errorf("no flag for id %d", id)
 	}
@@ -869,7 +869,7 @@ func (flagSet *FlagSet) unsetFlag(id int) error {
 	}
 
 	// Check the flag
-	flag := flagSet.lookupFlagByID(id)
+	flag := flagSet.flagByID(id)
 	if flag == nil {
 		return fmt.Errorf("no flag for id %d", id)
 	}
