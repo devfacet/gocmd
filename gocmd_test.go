@@ -173,12 +173,42 @@ func ExampleCmd_PrintVersion() {
 	// Output: 1.0.0
 }
 
+func ExampleCmd_PrintVersion_auto() {
+	os.Args = []string{"./app", "-test.test=1", "-v"}
+	gocmd.New(gocmd.Options{
+		Version: "1.0.0",
+		Flags: &struct {
+			Version bool `short:"v" long:"version"`
+		}{},
+		AutoVersion: true,
+	})
+	resetArgs()
+	// Output: 1.0.0
+}
+
 func ExampleCmd_PrintVersion_extra() {
 	cmd, _ := gocmd.New(gocmd.Options{
 		Name:    "test",
 		Version: "1.0.0",
 	})
 	cmd.PrintVersion(true)
+	// Output:
+	// App name    : test
+	// App version : 1.0.0
+	// Go version  : TEST
+}
+
+func ExampleCmd_PrintVersion_extra_auto() {
+	os.Args = []string{"./app", "-test.test=1", "-vv"}
+	gocmd.New(gocmd.Options{
+		Name:    "test",
+		Version: "1.0.0",
+		Flags: &struct {
+			Version bool `long:"vv" long:"version"`
+		}{},
+		AutoVersion: true,
+	})
+	resetArgs()
 	// Output:
 	// App name    : test
 	// App version : 1.0.0
@@ -196,4 +226,26 @@ func ExampleCmd_PrintUsage() {
 	// Usage: test
 	//
 	// Test
+}
+
+func ExampleCmd_PrintUsage_auto() {
+	os.Args = []string{"./app", "-test.test=1", "-h"}
+	gocmd.New(gocmd.Options{
+		Name:        "test",
+		Version:     "1.0.0",
+		Description: "Test",
+		Flags: &struct {
+			Help bool `short:"h" long:"help"`
+		}{},
+		AutoHelp: true,
+	})
+	//cmd.PrintUsage()
+	resetArgs()
+	// Output:
+	// Usage: test [options...]
+	//
+	// Test
+	//
+	// Options:
+	//   -h, --help
 }
