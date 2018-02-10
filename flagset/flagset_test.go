@@ -387,6 +387,16 @@ func TestNew(t *testing.T) {
 		So(flagSet.Errors(), ShouldBeNil)
 		So(flags07.Default, ShouldEqual, "foo bar")
 
+		flags08 := struct {
+			Default string `short:"d" long:"default" default:"foo"`
+		}{}
+		args = []string{"./app", "-d", "'foo bar'"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags08, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags08.Default, ShouldEqual, "foo bar")
+
 		flags10 := struct {
 			Default string `short:"d" long:"default" default:"foo"`
 		}{}
@@ -497,6 +507,16 @@ func TestNew(t *testing.T) {
 		So(flags06.Foo, ShouldEqual, true)
 		So(flags06.String, ShouldEqual, "foo")
 		So(flags06.CommandQux.Baz, ShouldEqual, true)
+
+		flags07 := struct {
+			Foo bool `short:"f" long:"foo" default:"true" required:"true"`
+		}{}
+		args = []string{"./app"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags07, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flags07.Foo, ShouldEqual, true)
 	})
 
 	Convey("should return correct flag values (global)", t, func() {
@@ -1993,6 +2013,27 @@ func TestFlagSet_FlagByName(t *testing.T) {
 		So(flagSet.Errors(), ShouldBeNil)
 		flag = flagSet.FlagByName("")
 		So(flag, ShouldBeNil)
+	})
+}
+
+func TestFlagSet_FlagByArg(t *testing.T) {
+	Convey("should return a flag by the given argument name", t, func() {
+		flags := struct {
+			Foo string `long:"foo"`
+			Bar struct {
+				Baz string `long:"baz"`
+			} `command:"bar"`
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		flag := flagSet.FlagByArg("foo", "")
+		So(flag, ShouldNotBeNil)
+		So(flag.Long(), ShouldEqual, "foo")
+		flag = flagSet.FlagByArg("baz", "Bar")
+		So(flag, ShouldNotBeNil)
+		So(flag.Long(), ShouldEqual, "baz")
 	})
 }
 
