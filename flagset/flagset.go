@@ -295,6 +295,32 @@ func (flagSet *FlagSet) FlagByArg(arg, command string) *Flag {
 	return result
 }
 
+// flagByID returns a flag by the given id or returns nil if it doesn't exist
+func (flagSet *FlagSet) flagByID(id int) *Flag {
+	if id < 0 {
+		return nil
+	}
+	for _, v := range flagSet.flags {
+		if v.id == id {
+			return v
+		}
+	}
+	return nil
+}
+
+// flagByIndex returns a flag by the given field index or returns nil if it doesn't exist
+func (flagSet *FlagSet) flagByIndex(index []int) *Flag {
+	if index == nil {
+		return nil
+	}
+	for _, v := range flagSet.flags {
+		if fmt.Sprint(v.fieldIndex) == fmt.Sprint(index) { // faster then reflect.DeepEqual
+			return v
+		}
+	}
+	return nil
+}
+
 // FlagArgs returns the flag arguments those exist in the argument list
 // If the flag is an argument then it return it's values (i.e. [foo bar] for `-f=foo -f=bar`)
 // If it's a command then it returns the command name and the rest of the arguments (i.e. [command -f=true --bar=baz qux] for `command -f --bar=baz qux`).
@@ -362,32 +388,6 @@ func (flagSet *FlagSet) Errors() []error {
 		}
 	}
 	return result
-}
-
-// flagByID returns a flag by the given id or returns nil if it doesn't exist
-func (flagSet *FlagSet) flagByID(id int) *Flag {
-	if id < 0 {
-		return nil
-	}
-	for _, v := range flagSet.flags {
-		if v.id == id {
-			return v
-		}
-	}
-	return nil
-}
-
-// flagByIndex returns a flag by the given field index or returns nil if it doesn't exist
-func (flagSet *FlagSet) flagByIndex(index []int) *Flag {
-	if index == nil {
-		return nil
-	}
-	for _, v := range flagSet.flags {
-		if fmt.Sprint(v.fieldIndex) == fmt.Sprint(index) { // faster then reflect.DeepEqual
-			return v
-		}
-	}
-	return nil
 }
 
 // parseCommands parses the raw arguments and updates the commands
