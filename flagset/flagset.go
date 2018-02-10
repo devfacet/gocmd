@@ -317,25 +317,26 @@ func (flagSet *FlagSet) FlagArgs(name string) []string {
 		if flag.kind == "arg" {
 			result = append(result, v.value)
 		} else if flag.kind == "command" {
-			if v.kind == "argval" {
-				// Skip argument values since they are coupled with parent arguments
-				// Note that argument values are not added into the flag arguments (see parseArgs method)
-				continue
-			}
+			// Note that argument values ("argval") are coupled with their parent arguments hence
+			// they are not added into the flag arguments (see parseArgs method).
 
-			arg := ""
-			if v.kind == "arg" {
-				arg = v.dash
-				if v.name != "" {
-					arg = fmt.Sprintf("%s%s", arg, v.name)
+			// If it's a argument or command then
+			if v.kind == "arg" || v.kind == "command" {
+				arg := ""
+				if v.kind == "arg" {
+					arg = v.dash
+					if v.name != "" {
+						arg = fmt.Sprintf("%s%s", arg, v.name)
+					}
+					if v.value != "" {
+						arg = fmt.Sprintf("%s=%s", arg, v.value)
+					}
+				} else {
+					// For example: command itself
+					arg = v.name
 				}
-				if v.value != "" {
-					arg = fmt.Sprintf("%s=%s", arg, v.value)
-				}
-			} else {
-				arg = v.name
+				result = append(result, arg)
 			}
-			result = append(result, arg)
 		}
 	}
 
