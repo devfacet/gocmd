@@ -73,7 +73,9 @@ func New(o Options) (*Cmd, error) {
 
 			if ver || verEx {
 				cmd.PrintVersion(verEx)
-				os.Exit(0)
+				if !cmd.isTest() {
+					os.Exit(0)
+				}
 			}
 		}
 
@@ -96,7 +98,9 @@ func New(o Options) (*Cmd, error) {
 
 			if help {
 				cmd.PrintUsage()
-				os.Exit(0)
+				if !cmd.isTest() {
+					os.Exit(0)
+				}
 			}
 		}
 	}
@@ -158,11 +162,8 @@ func (cmd *Cmd) PrintVersion(extra bool) {
 	goVersion := runtime.Version()
 
 	// Update Go version for tests
-	for _, v := range os.Args {
-		if strings.Index(v, "-test") == 0 {
-			goVersion = "TEST"
-			break
-		}
+	if cmd.isTest() {
+		goVersion = "TEST"
 	}
 
 	// Set version
@@ -323,4 +324,18 @@ func (cmd *Cmd) usageContent() string {
 	}
 
 	return usage
+}
+
+func (cmd *Cmd) isTest() bool {
+	if len(os.Args) > 0 {
+		if strings.HasSuffix(os.Args[0], "gocmd.test") {
+			return true
+		}
+		for _, v := range os.Args {
+			if strings.HasPrefix(v, "-test.") {
+				return true
+			}
+		}
+	}
+	return false
 }

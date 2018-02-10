@@ -122,6 +122,9 @@ func TestCmd_LookupFlag(t *testing.T) {
 		v, ok := cmd.LookupFlag("Foo")
 		So(v, ShouldContain, "true")
 		So(ok, ShouldEqual, true)
+		v, ok = cmd.LookupFlag("Bar")
+		So(v, ShouldBeNil)
+		So(ok, ShouldEqual, false)
 	})
 }
 
@@ -140,6 +143,9 @@ func TestCmd_FlagValue(t *testing.T) {
 		v, ok := cmd.FlagValue("Foo").(bool)
 		So(v, ShouldEqual, true)
 		So(ok, ShouldEqual, true)
+		v, ok = cmd.FlagValue("Bar").(bool)
+		So(v, ShouldEqual, false)
+		So(ok, ShouldEqual, false)
 	})
 }
 

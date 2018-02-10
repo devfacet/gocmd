@@ -6,10 +6,23 @@
 package gocmd
 
 import (
+	"os"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var osArgs []string
+
+func init() {
+	osArgs = make([]string, len(os.Args))
+	copy(osArgs, os.Args)
+}
+
+func resetArgs() {
+	os.Args = make([]string, len(osArgs))
+	copy(os.Args, osArgs)
+}
 
 func TestCmd_usageItems(t *testing.T) {
 	Convey("should return the correct usage items", t, func() {
@@ -22,7 +35,10 @@ func TestCmd_usageItems(t *testing.T) {
 				Bar struct {
 					Baz bool `short:"b" long:"baz" description:"Test baz"`
 					Qux struct {
-						Quux bool `short:"q" long:"quux" description:"Test quux"`
+						Quux    bool   `short:"q" long:"quux" description:"Test quux"`
+						String  string `short:"s" long:"string" default:"/go" env:"GOPATH" description:"Test"`
+						Default string `short:"d" long:"default" default:"default" description:"Test"`
+						Env     string `short:"e" long:"env" env:"GOPATH" description:"Test"`
 					} `description:"Qux command"`
 				} `description:"Bar command"`
 			}{},
@@ -42,7 +58,7 @@ func TestCmd_usageItems(t *testing.T) {
 
 		usageItems = cmd.usageItems("command", -1, 0)
 		So(usageItems, ShouldNotBeNil)
-		So(usageItems, ShouldHaveLength, 4)
+		So(usageItems, ShouldHaveLength, 7)
 		So(usageItems[0].kind, ShouldEqual, "command")
 		So(usageItems[0].flagID, ShouldEqual, 1)
 		So(usageItems[0].parentID, ShouldEqual, -1)
@@ -67,6 +83,15 @@ func TestCmd_usageItems(t *testing.T) {
 		So(usageItems[3].left, ShouldEqual, "-q, --quux")
 		So(usageItems[3].right, ShouldEqual, "Test quux")
 		So(usageItems[3].level, ShouldEqual, 3)
+		So(usageItems[4].left, ShouldEqual, "-s, --string")
+		So(usageItems[4].right, ShouldEqual, "Test (default /go - override $GOPATH)")
+		So(usageItems[4].level, ShouldEqual, 3)
+		So(usageItems[5].left, ShouldEqual, "-d, --default")
+		So(usageItems[5].right, ShouldEqual, "Test (default default)")
+		So(usageItems[5].level, ShouldEqual, 3)
+		So(usageItems[6].left, ShouldEqual, "-e, --env")
+		So(usageItems[6].right, ShouldEqual, "Test (default $GOPATH)")
+		So(usageItems[6].level, ShouldEqual, 3)
 	})
 }
 
@@ -91,5 +116,28 @@ func TestCmd_usageContent(t *testing.T) {
 		usage := cmd.usageContent()
 		So(usage, ShouldNotBeEmpty)
 		So(usage, ShouldEqual, "\nUsage: test [options...] COMMAND [options...]\n\nTest\n\nOptions:       \t\n  -f, --foo    \tTest foo                \t\n  -b           \tTest bar                \t\n      --baz    \tTest baz                \t\n               \t\nCommands:      \t\n  qux          \tQux command             \t\n    -f, --foo  \tTest foo                \t\n        --quux \tTest quux (default test)\t\n")
+	})
+}
+
+func TestCmd_isTest(t *testing.T) {
+	Convey("should return whether it's a test or not", t, func() {
+		cmd, err := New(Options{Name: "test"})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		So(cmd.isTest(), ShouldEqual, true)
+
+		os.Args = []string{"./app", "-test."}
+		cmd, err = New(Options{Name: "test"})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		So(cmd.isTest(), ShouldEqual, true)
+		resetArgs()
+
+		os.Args = []string{"./app"}
+		cmd, err = New(Options{Name: "test"})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		So(cmd.isTest(), ShouldEqual, false)
+		resetArgs()
 	})
 }
