@@ -6,6 +6,7 @@
 package flagset_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/devfacet/gocmd/flagset"
@@ -65,6 +66,20 @@ func TestFlag_Long(t *testing.T) {
 		flag := flagSet.FlagByName("Test")
 		So(flag, ShouldNotBeNil)
 		So(flag.Long(), ShouldEqual, "foo")
+	})
+}
+
+func TestFlag_FormattedArg(t *testing.T) {
+	Convey("should return the formatted argument of the flag", t, func() {
+		flags := struct {
+			Test string `short:"f"`
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Test")
+		So(flag, ShouldNotBeNil)
+		So(flag.Short(), ShouldEqual, "f")
 	})
 }
 
@@ -254,6 +269,25 @@ func TestFlag_Value(t *testing.T) {
 	})
 }
 
+func TestFlag_Kind(t *testing.T) {
+	Convey("should return the kind of the flag", t, func() {
+		flags := struct {
+			Test    string `short:"t"`
+			Command struct {
+			}
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Test")
+		So(flag, ShouldNotBeNil)
+		So(flag.Kind(), ShouldEqual, "arg")
+		flag = flagSet.FlagByName("Command")
+		So(flag, ShouldNotBeNil)
+		So(flag.Kind(), ShouldEqual, "command")
+	})
+}
+
 func TestFlag_FieldIndex(t *testing.T) {
 	Convey("should return the field index of the flag", t, func() {
 		flags := struct {
@@ -305,25 +339,6 @@ func TestFlag_ParentIndex(t *testing.T) {
 	})
 }
 
-func TestFlag_Kind(t *testing.T) {
-	Convey("should return the kind of the flag", t, func() {
-		flags := struct {
-			Test    string `short:"t"`
-			Command struct {
-			}
-		}{}
-		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
-		So(err, ShouldBeNil)
-		So(flagSet, ShouldNotBeNil)
-		flag := flagSet.FlagByName("Test")
-		So(flag, ShouldNotBeNil)
-		So(flag.Kind(), ShouldEqual, "arg")
-		flag = flagSet.FlagByName("Command")
-		So(flag, ShouldNotBeNil)
-		So(flag.Kind(), ShouldEqual, "command")
-	})
-}
-
 func TestFlag_ParentID(t *testing.T) {
 	Convey("should return the parent id of the flag", t, func() {
 		flags := struct {
@@ -349,5 +364,47 @@ func TestFlag_ParentID(t *testing.T) {
 		flag = flagSet.FlagByName("CommandFoo.CommandBar.CommandBaz.Test")
 		So(flag, ShouldNotBeNil)
 		So(flag.ParentID(), ShouldEqual, 4)
+	})
+}
+
+func TestFlag_CommandID(t *testing.T) {
+	Convey("should return the command id of the flag", t, func() {
+		flags := struct {
+			CommandFoo struct {
+				Test       string `short:"t"`
+				CommandBar struct {
+					Test       string `short:"t"`
+					CommandBaz struct {
+						Test string `short:"t"`
+					}
+				}
+			}
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("CommandFoo")
+		So(flag, ShouldNotBeNil)
+		So(flag.CommandID(), ShouldEqual, 0)
+		flag = flagSet.FlagByName("CommandFoo.CommandBar")
+		So(flag, ShouldNotBeNil)
+		So(flag.CommandID(), ShouldEqual, 1)
+		flag = flagSet.FlagByName("CommandFoo.CommandBar.CommandBaz")
+		So(flag, ShouldNotBeNil)
+		So(flag.CommandID(), ShouldEqual, 2)
+	})
+}
+
+func TestFlag_Err(t *testing.T) {
+	Convey("should return the error of the flag", t, func() {
+		flags := struct {
+			Test string `short:"f" required:"true"`
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Test")
+		So(flag, ShouldNotBeNil)
+		So(flag.Err(), ShouldBeError, errors.New("argument -f is required"))
 	})
 }
