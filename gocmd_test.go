@@ -14,6 +14,18 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var osArgs []string
+
+func init() {
+	osArgs = make([]string, len(os.Args))
+	copy(osArgs, os.Args)
+}
+
+func resetArgs() {
+	os.Args = make([]string, len(osArgs))
+	copy(os.Args, osArgs)
+}
+
 func TestNew(t *testing.T) {
 	Convey("should create a new command", t, func() {
 		// Override the command line arguments for the test
@@ -178,15 +190,4 @@ func ExampleCmd_PrintUsage() {
 	// Usage: test
 	//
 	// Test
-}
-
-var osArgs []string
-
-func init() {
-	osArgs = make([]string, len(os.Args))
-	copy(osArgs, os.Args)
-}
-
-func resetArgs() {
-	copy(os.Args, osArgs)
 }
