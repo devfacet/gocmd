@@ -7,10 +7,12 @@ A Go library for building command line applications.
 ## Features
 
 - Advanced command line arguments handling
-	- Short and long command line arguments
-	- Support for environment variables
 	- Subcommand handling
+	- Short and long command line arguments
+	- Multiple arguments (repeated or delimited)
+	- Support for environment variables
 	- Well formatted usage printing
+	- Auto usage and version printing
 - Output tables in the terminal
 - Template support for config files
 - No external dependency
