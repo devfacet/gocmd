@@ -65,8 +65,8 @@ type Flag struct {
 	parentID     int
 	commandID    int
 	args         []*Arg
-	updatedBy    []string // for debug
 	err          error
+	updatedBy    []string // for debug
 }
 
 // ID returns the id of the flag
@@ -168,4 +168,14 @@ func (f *Flag) ParentIndex() []int {
 // ParentID returns the parent flag id of the flag
 func (f *Flag) ParentID() int {
 	return f.parentID
+}
+
+// CommandID returns the command flag id of the flag
+func (f *Flag) CommandID() int {
+	return f.commandID
+}
+
+// Err returns the error of the flag
+func (f *Flag) Err() error {
+	return f.err
 }
