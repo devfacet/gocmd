@@ -3,11 +3,12 @@
  * For the full copyright and license information, please view the LICENSE.txt file.
  */
 
-package flagset
+package flagset_test
 
 import (
 	"testing"
 
+	"github.com/devfacet/gocmd/flagset"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -16,7 +17,7 @@ func TestFlag_ID(t *testing.T) {
 		flags := struct {
 			Test string `short:"f"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -30,7 +31,7 @@ func TestFlag_Name(t *testing.T) {
 		flags := struct {
 			Test string `short:"f"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -44,7 +45,7 @@ func TestFlag_Short(t *testing.T) {
 		flags := struct {
 			Test string `short:"f"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -58,7 +59,7 @@ func TestFlag_Long(t *testing.T) {
 		flags := struct {
 			Test string `long:"foo"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -73,7 +74,7 @@ func TestFlag_Command(t *testing.T) {
 			Test struct {
 			} `command:"bar"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -87,7 +88,7 @@ func TestFlag_Description(t *testing.T) {
 		flags := struct {
 			Test string `short:"f" description:"baz"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -101,7 +102,7 @@ func TestFlag_Required(t *testing.T) {
 		flags := struct {
 			Test string `short:"f" required:"true"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -115,7 +116,7 @@ func TestFlag_Global(t *testing.T) {
 		flags := struct {
 			Test string `short:"f" global:"true"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -129,7 +130,7 @@ func TestFlag_Env(t *testing.T) {
 		flags := struct {
 			Test string `short:"f" env:"GOPATH"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -143,7 +144,7 @@ func TestFlag_Delimiter(t *testing.T) {
 		flags := struct {
 			Test []string `short:"f" delimiter:","`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -157,7 +158,7 @@ func TestFlag_ValueDefault(t *testing.T) {
 		flags := struct {
 			Test string `short:"f" default:"qux"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -171,7 +172,7 @@ func TestFlag_ValueType(t *testing.T) {
 		flags := struct {
 			Test string `short:"f"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -185,7 +186,7 @@ func TestFlag_ValueBy(t *testing.T) {
 		flags01 := struct {
 			Test string `short:"f"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags01})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags01})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -196,7 +197,7 @@ func TestFlag_ValueBy(t *testing.T) {
 			Test string `short:"f"`
 		}{}
 		args := []string{"./app", "-f=foo"}
-		flagSet, err = New(Options{Flags: &flags02, Args: args})
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags02, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag = flagSet.FlagByName("Test")
@@ -207,7 +208,7 @@ func TestFlag_ValueBy(t *testing.T) {
 			Test string `short:"f" default:"bar"`
 		}{}
 		args = []string{"./app"}
-		flagSet, err = New(Options{Flags: &flags03, Args: args})
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags03, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag = flagSet.FlagByName("Test")
@@ -218,7 +219,7 @@ func TestFlag_ValueBy(t *testing.T) {
 			Test string `short:"f" env:"FOO_BAR_BAZ"`
 		}{}
 		args = []string{"./app"}
-		flagSet, err = New(Options{Flags: &flags04, Args: args})
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags04, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag = flagSet.FlagByName("Test")
@@ -229,12 +230,78 @@ func TestFlag_ValueBy(t *testing.T) {
 			Test string `short:"f" env:"GOPATH"`
 		}{}
 		args = []string{"./app"}
-		flagSet, err = New(Options{Flags: &flags05, Args: args})
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags05, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag = flagSet.FlagByName("Test")
 		So(flag, ShouldNotBeNil)
 		So(flag.ValueBy(), ShouldEqual, "env")
+	})
+}
+
+func TestFlag_Value(t *testing.T) {
+	Convey("should return the value of the flag", t, func() {
+		flags := struct {
+			Test string `short:"f"`
+		}{}
+		args := []string{"./app", "-f=foo"}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Test")
+		So(flag, ShouldNotBeNil)
+		So(flag.Value(), ShouldEqual, "foo")
+	})
+}
+
+func TestFlag_FieldIndex(t *testing.T) {
+	Convey("should return the field index of the flag", t, func() {
+		flags := struct {
+			Foo string `short:"f"`
+			Bar struct {
+				Baz string `short:"b"`
+			} `command:"bar"`
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Foo")
+		So(flag, ShouldNotBeNil)
+		So(flag.FieldIndex(), ShouldHaveLength, 1)
+		So(flag.FieldIndex()[0], ShouldEqual, 0)
+		flag = flagSet.FlagByName("Bar")
+		So(flag, ShouldNotBeNil)
+		So(flag.FieldIndex(), ShouldHaveLength, 1)
+		So(flag.FieldIndex(), ShouldResemble, []int{1})
+		flag = flagSet.FlagByName("Bar.Baz")
+		So(flag, ShouldNotBeNil)
+		So(flag.FieldIndex(), ShouldHaveLength, 2)
+		So(flag.FieldIndex(), ShouldResemble, []int{1, 0})
+	})
+}
+
+func TestFlag_ParentIndex(t *testing.T) {
+	Convey("should return the field index of the flag", t, func() {
+		flags := struct {
+			Foo string `short:"f"`
+			Bar struct {
+				Baz string `short:"b"`
+				Qux struct {
+					Quux string `short:"q"`
+				} `command:"qux"`
+			} `command:"bar"`
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Bar.Baz")
+		So(flag, ShouldNotBeNil)
+		So(flag.ParentIndex(), ShouldHaveLength, 1)
+		So(flag.ParentIndex(), ShouldResemble, []int{1})
+		flag = flagSet.FlagByName("Bar.Qux.Quux")
+		So(flag, ShouldNotBeNil)
+		So(flag.ParentIndex(), ShouldHaveLength, 2)
+		So(flag.ParentIndex(), ShouldResemble, []int{1, 1})
 	})
 }
 
@@ -245,7 +312,7 @@ func TestFlag_Kind(t *testing.T) {
 			Command struct {
 			}
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
@@ -270,7 +337,7 @@ func TestFlag_ParentID(t *testing.T) {
 				}
 			}
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("CommandFoo.Test")
