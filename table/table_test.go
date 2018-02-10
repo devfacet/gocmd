@@ -94,6 +94,6 @@ func TestTable_FormattedData(t *testing.T) {
 
 		So(t, ShouldNotBeNil)
 		So(t.AddRow("foo", "bar"), ShouldBeNil)
-		So(t.FormattedData(), ShouldEqual, "foo	bar\t\n")
+		So(t.FormattedData(), ShouldEqual, "foo	bar\n")
 	})
 }

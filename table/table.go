@@ -9,6 +9,8 @@ package table
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"unicode"
 )
 
 // Options represents the options that can be set when creating a new table
@@ -109,7 +111,7 @@ func (t *Table) FormattedData() string {
 			colSize = fmt.Sprintf("%d", t.colSizes[i])
 			rowVal += fmt.Sprintf("%-"+colSize+"s\t", c)
 		}
-		result += fmt.Sprintf("%s\n", rowVal)
+		result += fmt.Sprintf("%s\n", strings.TrimRightFunc(rowVal, unicode.IsSpace))
 	}
 
 	return result
