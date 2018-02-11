@@ -3120,15 +3120,21 @@ func TestFlagSet_setFlag(t *testing.T) {
 
 func TestFlagSet_unsetFlag(t *testing.T) {
 	Convey("should fail to unset flag", t, func() {
-		flags := struct {
-			Foo struct{} `short:"f"`
+		flags01 := struct {
+			Foo bool `short:"f"`
 		}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := New(Options{Flags: &flags01})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
-		//So(flagSet.Errors(), ShouldBeNil)
 		So(flagSet.unsetFlag(-1), ShouldBeError, errors.New("flag id is required"))
 		So(flagSet.unsetFlag(99), ShouldBeError, errors.New("no flag for id 99"))
+
+		flags02 := struct {
+			Foo struct{} `command:"foo"`
+		}{}
+		flagSet, err = New(Options{Flags: &flags02})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
 		So(flagSet.unsetFlag(0), ShouldBeError, fmt.Errorf("invalid type struct. Supported types: %s", supportedFlagValueTypes))
 	})
 }
