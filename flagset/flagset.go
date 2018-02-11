@@ -1036,6 +1036,7 @@ func structFieldToFlag(sf structField) Flag {
 		commandID:    -1,
 		args:         nil,
 		err:          nil,
+		updatedBy:    nil,
 	}
 	if v := sf.field.Tag.Get("required"); v == "true" {
 		flag.required = true
