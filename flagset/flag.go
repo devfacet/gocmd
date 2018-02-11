@@ -51,7 +51,8 @@ type Flag struct {
 	long         string
 	command      string
 	description  string
-	required     bool
+	required     bool // flag must be present
+	nonempty     bool // if the flag is present then it must have a value
 	global       bool
 	env          string
 	delimiter    string
@@ -113,6 +114,11 @@ func (f *Flag) Description() string {
 // Required returns whether the flag is required or not
 func (f *Flag) Required() bool {
 	return f.required
+}
+
+// Nonempty returns whether the flag requires a non-empty argument value or not
+func (f *Flag) Nonempty() bool {
+	return f.nonempty
 }
 
 // Global returns whether the flag is global or not

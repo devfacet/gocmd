@@ -126,6 +126,40 @@ func TestFlag_Required(t *testing.T) {
 	})
 }
 
+func TestFlag_Nonempty(t *testing.T) {
+	Convey("should return the nonempty value of the flag", t, func() {
+		flags := struct {
+			Foo  string `short:"f"`
+			Bar  string `short:"b" nonempty:"true"`
+			Baz  string `short:"B" nonempty:"false"`
+			Qux  string `short:"q" nonempty:"true" required:"true"`
+			Quux string `short:"x" nonempty:"false" required:"true"`
+			Test string `short:"t" required:"true"`
+		}{}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flag := flagSet.FlagByName("Foo")
+		So(flag, ShouldNotBeNil)
+		So(flag.Nonempty(), ShouldEqual, false)
+		flag = flagSet.FlagByName("Bar")
+		So(flag, ShouldNotBeNil)
+		So(flag.Nonempty(), ShouldEqual, true)
+		flag = flagSet.FlagByName("Baz")
+		So(flag, ShouldNotBeNil)
+		So(flag.Nonempty(), ShouldEqual, false)
+		flag = flagSet.FlagByName("Qux")
+		So(flag, ShouldNotBeNil)
+		So(flag.Nonempty(), ShouldEqual, true)
+		flag = flagSet.FlagByName("Quux")
+		So(flag, ShouldNotBeNil)
+		So(flag.Nonempty(), ShouldEqual, false)
+		flag = flagSet.FlagByName("Test")
+		So(flag, ShouldNotBeNil)
+		So(flag.Nonempty(), ShouldEqual, true)
+	})
+}
+
 func TestFlag_Global(t *testing.T) {
 	Convey("should return the global value of the flag", t, func() {
 		flags := struct {

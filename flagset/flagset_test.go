@@ -108,20 +108,21 @@ func TestNew(t *testing.T) {
 
 	Convey("should return correct errors", t, func() {
 		flags01 := struct {
-			Bool    bool      `short:"b" long:"bool"`
-			Float64 float64   `short:"f" long:"float64"`
-			Int     int       `short:"i" long:"int"`
-			Int64   int64     `short:"I" long:"int64"`
-			Uint    uint      `short:"u" long:"uint"`
-			Uint64  uint64    `short:"U" long:"uint64"`
-			Bools   []bool    `long:"bools" delimiter:","`
-			Floats  []float64 `long:"floats" delimiter:","`
-			Ints    []int     `long:"ints" delimiter:","`
-			Int64s  []int64   `long:"Ints" delimiter:","`
-			Uints   []uint    `long:"uints" delimiter:","`
-			Uint64s []uint64  `long:"Uints" delimiter:","`
-			Env     int       `short:"e" env:"GOPATH"`
-			Default int       `short:"d" default:"DEFAULT"`
+			Bool     bool      `short:"b" long:"bool"`
+			Float64  float64   `short:"f" long:"float64"`
+			Int      int       `short:"i" long:"int"`
+			Int64    int64     `short:"I" long:"int64"`
+			Uint     uint      `short:"u" long:"uint"`
+			Uint64   uint64    `short:"U" long:"uint64"`
+			Bools    []bool    `long:"bools" delimiter:","`
+			Floats   []float64 `long:"floats" delimiter:","`
+			Ints     []int     `long:"ints" delimiter:","`
+			Int64s   []int64   `long:"Ints" delimiter:","`
+			Uints    []uint    `long:"uints" delimiter:","`
+			Uint64s  []uint64  `long:"Uints" delimiter:","`
+			Env      int       `short:"e" env:"GOPATH"`
+			Default  int       `short:"d" default:"DEFAULT"`
+			Nonempty string    `short:"n" nonempty:"true"`
 		}{}
 		args := []string{
 			"./app",
@@ -137,6 +138,7 @@ func TestNew(t *testing.T) {
 			"--Ints=1,foofoo,2",
 			"--uints=1,foofoo,2",
 			"--Uints=1,foofoo,2",
+			"-n",
 		}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags01, Args: args})
 		So(err, ShouldBeNil)
@@ -156,6 +158,7 @@ func TestNew(t *testing.T) {
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as uint"))
 		So(flagErrors, ShouldContain, fmt.Errorf("failed to parse '%s' as int", os.Getenv("GOPATH")))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'DEFAULT' as int"))
+		So(flagErrors, ShouldContain, errors.New("argument -n needs a nonempty value"))
 	})
 
 	Convey("should return correct flags (sanity)", t, func() {
@@ -517,6 +520,177 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
 		So(flags07.Foo, ShouldEqual, true)
+	})
+
+	Convey("should return correct flag errors (nonempty)", t, func() {
+		flags01 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"true"`
+		}{}
+		args := []string{"./app"}
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags01, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors := flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags02 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"true"`
+		}{}
+		args = []string{"./app", "-f=test", "-b=test"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags02, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+
+		flags03 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"false"`
+			Bar []string `short:"b" long:"bar" nonempty:"false"`
+		}{}
+		args = []string{"./app", "-f=", "-b="}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags03, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+
+		flags04 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"false"`
+			Bar []string `short:"b" long:"bar" nonempty:"false"`
+		}{}
+		args = []string{"./app", "-f=\"\"", "-b=\"\""}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags04, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+
+		flags05 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"false"`
+			Bar []string `short:"b" long:"bar" nonempty:"false"`
+		}{}
+		args = []string{"./app", "-f=''", "-b=''"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags05, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+
+		flags06 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"true"`
+		}{}
+		args = []string{"./app", "-f=", "-b="}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags06, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+
+		flags07 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"true"`
+		}{}
+		args = []string{"./app", "-f=\"\"", "-b=\"\""}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags07, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+
+		flags08 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"true"`
+		}{}
+		args = []string{"./app", "-f=''", "-b=''"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags08, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+
+		flags09 := struct {
+			Foo string   `short:"f" long:"foo" required:"true"`
+			Bar []string `short:"b" long:"bar" required:"true"`
+		}{}
+		args = []string{"./app", "-f=", "-b="}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags09, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+
+		flags10 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true" required:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"true" required:"true"`
+		}{}
+		args = []string{"./app", "-f=", "-b="}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags10, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+
+		flags11 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"false" required:"true"`
+			Bar []string `short:"b" long:"bar" nonempty:"false" required:"true"`
+		}{}
+		args = []string{"./app", "-f=", "-b="}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags11, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+
+		flags12 := struct {
+			Foo string   `short:"f" long:"foo" nonempty:"true" required:"true" default:"test" `
+			Bar []string `short:"b" long:"bar" nonempty:"true" required:"true" default:"test" `
+		}{}
+		args = []string{"./app"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags12, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags13 := struct {
+			Foo string   `short:"f" long:"foo" required:"true" default:"test" `
+			Bar []string `short:"b" long:"bar" required:"true" default:"test" `
+		}{}
+		args = []string{"./app"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags13, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags14 := struct {
+			Foo struct {
+			} `command:"foo" nonempty:"true" required:"true"`
+		}{}
+		args = []string{"./app", "foo"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags14, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags15 := struct {
+			Foo struct {
+			} `command:"foo" required:"true"`
+		}{}
+		args = []string{"./app", "foo"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags15, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
 	})
 
 	Convey("should return correct flag values (global)", t, func() {

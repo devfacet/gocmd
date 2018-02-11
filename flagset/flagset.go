@@ -178,16 +178,16 @@ func New(o Options) (*FlagSet, error) {
 		}
 	}
 
-	// Iterate over the flags and check the required arguments
+	// Iterate over the flags and check the required and nonempty arguments
 	for _, flag := range flagSet.flags {
-		if !flag.required {
-			continue // skip non required flags
-		} else if flag.args != nil {
-			continue // skip if it has arguments
+		if !flag.required && !flag.nonempty {
+			continue // skip
 		}
 
 		if flag.kind == "command" {
-			flag.err = fmt.Errorf("command %s is required", flag.command)
+			if flag.required && flag.args == nil {
+				flag.err = fmt.Errorf("command %s is required", flag.command)
+			}
 			continue
 		} else if flag.kind == "arg" {
 			// Check the parent flag
@@ -195,27 +195,43 @@ func New(o Options) (*FlagSet, error) {
 			if flag.parentIndex != nil {
 				parentFlag := flagSet.flagByIndex(flag.parentIndex)
 				if parentFlag != nil {
+					// If the parent flag (command) has no argument then
+					if parentFlag.args == nil {
+						continue // skip it since it's not in the argument list / present
+					}
 					command = parentFlag.command
 				}
-				// If the parent flag (command) has no argument then
-				if parentFlag != nil && parentFlag.args == nil {
-					// It's not in the argument list so the flag isn't required
+			}
+
+			// Check nonempty when the flag is present
+			if flag.nonempty && flag.args != nil {
+				found := false
+				for _, arg := range flag.args {
+					if arg.value == "" {
+						found = true
+						break
+					}
+				}
+				if found {
+					flag.err = fmt.Errorf("argument %s needs a nonempty value", flag.FormattedArg())
 					continue
 				}
 			}
 
-			// Check the flag value
-			if flag.valueBy == "default" || flag.valueBy == "env" {
+			// Check requirement when the flag is not present
+			if flag.required && flag.args == nil {
+				// Skip error when the value is set by default value or env variables
+				if flag.valueBy == "default" || flag.valueBy == "env" {
+					continue
+				}
+				// Otherwise it's an error
+				e := fmt.Sprintf("argument %s is required", flag.FormattedArg())
+				if command != "" {
+					e = fmt.Sprintf("%s for %s command", e, command)
+				}
+				flag.err = errors.New(e)
 				continue
 			}
-
-			// Prepare error
-			eMsg := fmt.Sprintf("argument %s is required", flag.FormattedArg())
-			if command != "" {
-				eMsg = fmt.Sprintf("%s for %s command", eMsg, command)
-			}
-			flag.err = errors.New(eMsg)
-			continue
 		}
 	}
 
@@ -1005,6 +1021,7 @@ func structFieldToFlag(sf structField) Flag {
 		command:      strings.TrimSpace(sf.field.Tag.Get("command")),
 		description:  strings.TrimSpace(sf.field.Tag.Get("description")),
 		required:     false,
+		nonempty:     false,
 		global:       false,
 		env:          strings.TrimSpace(sf.field.Tag.Get("env")),
 		delimiter:    sf.field.Tag.Get("delimiter"),
@@ -1022,7 +1039,17 @@ func structFieldToFlag(sf structField) Flag {
 	}
 	if v := sf.field.Tag.Get("required"); v == "true" {
 		flag.required = true
+		// If the flag is required then it's value should not be empty (i.e. `-foo= -foo="" -foo=''`)
+		// For overriding this behavior use `required:"true" nonempty:"false"`
+		flag.nonempty = true
 	}
+
+	if v := sf.field.Tag.Get("nonempty"); v == "true" {
+		flag.nonempty = true
+	} else if v := sf.field.Tag.Get("nonempty"); v == "false" {
+		flag.nonempty = false
+	}
+
 	if v := sf.field.Tag.Get("global"); v == "true" {
 		flag.global = true
 	}
