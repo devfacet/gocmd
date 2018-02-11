@@ -63,9 +63,11 @@ func New(o Options) (*Cmd, error) {
 					ver = true
 				}
 			}
-			if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
-				if v, ok := f.Value().(bool); ok && v {
-					ver = true
+			if !ver {
+				if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
+					if v, ok := f.Value().(bool); ok && v {
+						ver = true
+					}
 				}
 			}
 			verEx := false
@@ -86,18 +88,21 @@ func New(o Options) (*Cmd, error) {
 		// Auto help
 		if o.AutoHelp {
 			help := false
-			if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
-				if v, ok := f.Value().(bool); ok && v {
-					help = true
-				}
-			}
-			if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
-				if v, ok := f.Value().(bool); ok && v {
-					help = true
-				}
-			}
 			if len(os.Args) == 1 {
 				help = true
+			} else {
+				if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
+					if v, ok := f.Value().(bool); ok && v {
+						help = true
+					}
+				}
+				if !help {
+					if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
+						if v, ok := f.Value().(bool); ok && v {
+							help = true
+						}
+					}
+				}
 			}
 
 			if help {
@@ -175,7 +180,7 @@ func (cmd *Cmd) PrintVersion(extra bool) {
 
 	// Update Go version for tests
 	if cmd.isTest() {
-		goVersion = "TEST"
+		goVersion = "vTest"
 	}
 
 	// Set version
