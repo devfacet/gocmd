@@ -15,28 +15,6 @@ import (
 )
 
 func TestFlagSet(t *testing.T) {
-	Convey("should return the correct flag set", t, func() {
-		flags01 := struct{}{}
-		flagSet, err := New(Options{Flags: &flags01})
-		So(err, ShouldBeNil)
-		So(flagSet, ShouldNotBeNil)
-		flagErrors := flagSet.Errors()
-		So(flagErrors, ShouldBeNil)
-		f := flagSet.flagByID(0)
-		So(f, ShouldBeNil)
-
-		flags02 := struct {
-			NoFlag string
-		}{}
-		flagSet, err = New(Options{Flags: &flags02})
-		So(err, ShouldBeNil)
-		So(flagSet, ShouldNotBeNil)
-		flagErrors = flagSet.Errors()
-		So(flagErrors, ShouldBeNil)
-		f = flagSet.flagByID(0)
-		So(f, ShouldBeNil)
-	})
-
 	Convey("should return the correct flag set and values", t, func() {
 		flags01 := struct {
 			Default  bool      `short:"d" long:"default" default:"false" description:"Default argument"`
@@ -718,16 +696,19 @@ func TestFlagSet(t *testing.T) {
 
 func TestFlagSet_flagByID(t *testing.T) {
 	Convey("should return nil when the flag id is not valid", t, func() {
-		flags := struct{}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := New(Options{Flags: &struct{}{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.flagByID(-1), ShouldBeNil)
 	})
 
 	Convey("should return nil when the flag id doesn't exist", t, func() {
-		flags := struct{}{}
-		flagSet, err := New(Options{Flags: &flags})
+		flagSet, err := New(Options{Flags: &struct{ NoFlag string }{}})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.flagByID(0), ShouldBeNil)
+
+		flagSet, err = New(Options{Flags: &struct{}{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.flagByID(0), ShouldBeNil)

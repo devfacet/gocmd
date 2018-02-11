@@ -99,8 +99,12 @@ func TestNew(t *testing.T) {
 	})
 
 	Convey("should return a new flag set", t, func() {
-		s := struct{}{}
-		flagSet, err := flagset.New(flagset.Options{Flags: &s})
+		flagSet, err := flagset.New(flagset.Options{Flags: &struct{}{}})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+
+		flagSet, err = flagset.New(flagset.Options{Flags: &struct{ NoFlag string }{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
@@ -108,57 +112,65 @@ func TestNew(t *testing.T) {
 
 	Convey("should return correct errors", t, func() {
 		flags01 := struct {
+			Default  int       `short:"d" default:"DEFAULT"`
+			Required int       `short:"r" required:"true"`
+			Nonempty string    `short:"n" nonempty:"true"`
+			Env      int       `short:"e" env:"GOPATH"`
 			Bool     bool      `short:"b" long:"bool"`
 			Float64  float64   `short:"f" long:"float64"`
 			Int      int       `short:"i" long:"int"`
 			Int64    int64     `short:"I" long:"int64"`
 			Uint     uint      `short:"u" long:"uint"`
 			Uint64   uint64    `short:"U" long:"uint64"`
+			String   string    `short:"s"`
 			Bools    []bool    `long:"bools" delimiter:","`
 			Floats   []float64 `long:"floats" delimiter:","`
 			Ints     []int     `long:"ints" delimiter:","`
 			Int64s   []int64   `long:"Ints" delimiter:","`
 			Uints    []uint    `long:"uints" delimiter:","`
 			Uint64s  []uint64  `long:"Uints" delimiter:","`
-			Env      int       `short:"e" env:"GOPATH"`
-			Default  int       `short:"d" default:"DEFAULT"`
-			Nonempty string    `short:"n" nonempty:"true"`
+			Strings  []string  `short:"S"`
 		}{}
 		args := []string{
 			"./app",
+			"-n",
 			"-b=foo",
 			"-f=foo",
 			"-i=foo",
 			"-I=foo",
 			"-u=foo",
 			"-U=foo",
+			"-s",
 			"--bools=true,foofoo,false",
 			"--floats=0.1,foofoo,0.2",
 			"--ints=1,foofoo,2",
 			"--Ints=1,foofoo,2",
 			"--uints=1,foofoo,2",
 			"--Uints=1,foofoo,2",
-			"-n",
+			"-S",
 		}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags01, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flagErrors := flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("failed to parse 'DEFAULT' as int"))
+		So(flagErrors, ShouldContain, errors.New("argument -r is required"))
+		So(flagErrors, ShouldContain, errors.New("argument -n needs a nonempty value"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as bool"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as float64"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as int"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as int64"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as uint"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as uint64"))
+		So(flagErrors, ShouldContain, errors.New("argument -s needs a value"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as bool"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as float64"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as int"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as int64"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as uint"))
 		So(flagErrors, ShouldContain, fmt.Errorf("failed to parse '%s' as int", os.Getenv("GOPATH")))
-		So(flagErrors, ShouldContain, errors.New("failed to parse 'DEFAULT' as int"))
-		So(flagErrors, ShouldContain, errors.New("argument -n needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -S needs a value"))
 	})
 
 	Convey("should return correct flags (sanity)", t, func() {
@@ -2240,6 +2252,8 @@ func TestFlagSet_FlagArgs(t *testing.T) {
 		So(flagArgs, ShouldNotBeNil)
 		So(flagArgs, ShouldHaveLength, 1)
 		So(flagArgs[0], ShouldEqual, "true")
+		flagArgs = flagSet.FlagArgs("")
+		So(flagArgs, ShouldBeNil)
 
 		flags02 := struct {
 			Foo []bool   `short:"f"`
