@@ -308,7 +308,7 @@ func TestFlag_Kind(t *testing.T) {
 		flags := struct {
 			Test    string `short:"t"`
 			Command struct {
-			}
+			} `command:"command"`
 		}{}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
@@ -382,9 +382,9 @@ func TestFlag_ParentID(t *testing.T) {
 					Test       string `short:"t"`
 					CommandBaz struct {
 						Test string `short:"t"`
-					}
-				}
-			}
+					} `command:"baz"`
+				} `command:"bar"`
+			} `command:"foo"`
 		}{}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
@@ -410,9 +410,9 @@ func TestFlag_CommandID(t *testing.T) {
 					Test       string `short:"t"`
 					CommandBaz struct {
 						Test string `short:"t"`
-					}
-				}
-			}
+					} `command:"baz"`
+				} `command:"bar"`
+			} `command:"foo"`
 		}{}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)

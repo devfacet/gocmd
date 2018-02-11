@@ -969,19 +969,15 @@ func structToFlags(value interface{}) ([]*Flag, []error) {
 	vType := reflect.Indirect(reflect.ValueOf(value)).Type()
 	fields := typeToStructField(vType, nil)
 	for k, field := range fields {
-		// Init the flag
 		flag := structFieldToFlag(field)
+		if flag.kind == "" {
+			continue // ship the non flag fields
+		}
 		flag.id = k
 		flag.fieldIndex = field.index
 		if field.parentIndex != nil {
 			flag.parentIndex = field.parentIndex // vType.FieldByIndex(flag.parentIndex).Name
 		}
-
-		// Ignore non flag fields
-		if flag.short == "" && flag.long == "" && flag.kind != "command" {
-			continue
-		}
-
 		result = append(result, &flag)
 	}
 
@@ -1029,7 +1025,7 @@ func structFieldToFlag(sf structField) Flag {
 		valueType:    sf.field.Type.String(),
 		valueBy:      "",
 		value:        nil,
-		kind:         "arg",
+		kind:         "",
 		fieldIndex:   nil,
 		parentIndex:  nil,
 		parentID:     -1,
@@ -1063,13 +1059,12 @@ func structFieldToFlag(sf structField) Flag {
 		flag.command = regArg.ReplaceAllString(flag.command, "")
 	}
 
-	// Check commands
-	if strings.HasPrefix(flag.valueType, "struct") {
-		flag.valueType = "struct"
+	// Check the flag kind
+	if flag.short != "" || flag.long != "" {
+		flag.kind = "arg"
+	} else if flag.command != "" && strings.HasPrefix(flag.valueType, "struct") {
 		flag.kind = "command"
-		if flag.command == "" {
-			flag.command = strings.ToLower(flag.name)
-		}
+		flag.valueType = "struct"
 	}
 
 	return flag

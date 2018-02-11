@@ -200,7 +200,7 @@ func TestCmd_FlagErrors(t *testing.T) {
 		cmd, err := gocmd.New(gocmd.Options{
 			Flags: &struct {
 				Foo struct {
-				} `global:"true"`
+				} `command:"foo" global:"true"`
 			}{},
 		})
 		So(err, ShouldBeNil)

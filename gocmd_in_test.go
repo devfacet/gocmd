@@ -39,8 +39,8 @@ func TestCmd_usageItems(t *testing.T) {
 						String  string `short:"s" long:"string" default:"/go" env:"GOPATH" description:"Test"`
 						Default string `short:"d" long:"default" default:"default" description:"Test"`
 						Env     string `short:"e" long:"env" env:"GOPATH" description:"Test"`
-					} `description:"Qux command"`
-				} `description:"Bar command"`
+					} `command:"qux" description:"Qux command"`
+				} `command:"bar" description:"Bar command"`
 			}{},
 		})
 		So(err, ShouldBeNil)
@@ -108,7 +108,7 @@ func TestCmd_usageContent(t *testing.T) {
 				Qux struct {
 					Foo  bool `short:"f" long:"foo" description:"Test foo"`
 					Quux bool `long:"quux" default:"test" description:"Test quux"`
-				} `description:"Qux command"`
+				} `command:"qux" description:"Qux command"`
 			}{},
 		})
 		So(err, ShouldBeNil)
