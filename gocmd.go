@@ -31,6 +31,8 @@ type Options struct {
 	AutoHelp bool
 	// AutoVersion prints the version content
 	AutoVersion bool
+	// AnyError checks all the errors and returns the first one
+	AnyError bool
 }
 
 // New returns a command by the given options
@@ -49,6 +51,8 @@ func New(o Options) (*Cmd, error) {
 		cmd.flagSet, err = flagset.New(flagset.Options{Flags: o.Flags})
 		if err != nil {
 			return nil, err
+		} else if o.AnyError && len(cmd.flagSet.Errors()) > 0 {
+			return nil, cmd.flagSet.Errors()[0]
 		}
 
 		// Auto version
