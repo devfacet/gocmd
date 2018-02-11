@@ -296,7 +296,7 @@ func (cmd *Cmd) usageContent() string {
 	t := table.New(table.Options{})
 
 	// Header and description
-	usage := "\nUsage: " + cmd.name
+	usage := "Usage: " + cmd.name
 	if hasOpt {
 		usage += " [options...]"
 	}
