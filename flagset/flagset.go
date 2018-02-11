@@ -397,10 +397,10 @@ func (flagSet *FlagSet) Errors() []error {
 		if flag.err != nil {
 			result = append(result, flag.err)
 		}
-		for _, arg := range flag.args {
-			if arg != nil && arg.err != nil {
-				result = append(result, arg.err)
-			}
+	}
+	for _, arg := range flagSet.args {
+		if arg != nil && arg.err != nil {
+			result = append(result, arg.err)
 		}
 	}
 	return result
