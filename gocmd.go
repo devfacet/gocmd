@@ -154,6 +154,14 @@ func (cmd *Cmd) FlagValue(name string) interface{} {
 	return nil
 }
 
+// FlagArgs returns the flag arguments by the given flag name
+func (cmd *Cmd) FlagArgs(name string) []string {
+	if args, ok := cmd.LookupFlag(name); ok && args != nil {
+		return args
+	}
+	return nil
+}
+
 // FlagErrors returns the list of the flag errors
 func (cmd *Cmd) FlagErrors() []error {
 	return cmd.flagSet.Errors()
