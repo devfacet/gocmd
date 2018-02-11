@@ -174,7 +174,7 @@ func ExampleCmd_PrintVersion() {
 }
 
 func ExampleCmd_PrintVersion_auto() {
-	os.Args = []string{"./app", "-test.test=1", "-v"}
+	os.Args = []string{"gocmd.test", "-v"}
 	gocmd.New(gocmd.Options{
 		Version: "1.0.0",
 		Flags: &struct {
@@ -199,7 +199,7 @@ func ExampleCmd_PrintVersion_extra() {
 }
 
 func ExampleCmd_PrintVersion_extra_auto() {
-	os.Args = []string{"./app", "-test.test=1", "-vv"}
+	os.Args = []string{"gocmd.test", "-vv"}
 	gocmd.New(gocmd.Options{
 		Name:    "test",
 		Version: "1.0.0",
@@ -229,7 +229,7 @@ func ExampleCmd_PrintUsage() {
 }
 
 func ExampleCmd_PrintUsage_auto() {
-	os.Args = []string{"./app", "-test.test=1", "-h"}
+	os.Args = []string{"gocmd.test", "-h"}
 	gocmd.New(gocmd.Options{
 		Name:        "test",
 		Version:     "1.0.0",
@@ -239,7 +239,6 @@ func ExampleCmd_PrintUsage_auto() {
 		}{},
 		AutoHelp: true,
 	})
-	//cmd.PrintUsage()
 	resetArgs()
 	// Output:
 	// Usage: test [options...]
