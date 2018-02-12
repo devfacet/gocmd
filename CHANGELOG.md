@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0.0 (2018-02-11)
+
+- [BREAKING CHANGE] Commands require struct tag
+- [BREAKING CHANGE] Unknown arguments cause error as default
+- Implement unknown argument handling
+- Implement noempty arguments
+- Add Cmd.FlagArgs
+- Add Cmd.Options.AnyError
+- Improve tests and examples
+
 ## v2.2.0 (2018-02-02)
 
 - Improve error handling for required flags
