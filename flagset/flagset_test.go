@@ -99,12 +99,12 @@ func TestNew(t *testing.T) {
 	})
 
 	Convey("should return a new flag set", t, func() {
-		flagSet, err := flagset.New(flagset.Options{Flags: &struct{}{}})
+		flagSet, err := flagset.New(flagset.Options{Flags: &struct{}{}, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
 
-		flagSet, err = flagset.New(flagset.Options{Flags: &struct{ NoFlag string }{}})
+		flagSet, err = flagset.New(flagset.Options{Flags: &struct{ NoFlag string }{}, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
@@ -1726,6 +1726,7 @@ func TestNew(t *testing.T) {
 				Foo    bool   `short:"f" long:"foo"`
 				String string `short:"s" long:"string"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args := []string{
 			"./app",
@@ -1746,6 +1747,7 @@ func TestNew(t *testing.T) {
 				Foo    bool   `short:"f" long:"foo"`
 				String string `short:"s" long:"string"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -1769,6 +1771,7 @@ func TestNew(t *testing.T) {
 				Foo    bool   `short:"f" long:"foo"`
 				String string `short:"s" long:"string"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -1792,6 +1795,7 @@ func TestNew(t *testing.T) {
 				Foo    bool   `short:"f" long:"foo"`
 				String string `short:"s" long:"string"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2140,7 +2144,7 @@ func TestFlagSet_FlagByName(t *testing.T) {
 			CommandBaz struct{} `command:"command_baz"`
 			Qux        string   `long:"qux"`
 		}{}
-		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
@@ -2183,7 +2187,7 @@ func TestFlagSet_FlagByName(t *testing.T) {
 		flags01 := struct {
 			Test string `short:"t"`
 		}{}
-		flagSet, err := flagset.New(flagset.Options{Flags: &flags01})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags01, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
@@ -2193,7 +2197,7 @@ func TestFlagSet_FlagByName(t *testing.T) {
 		flags02 := struct {
 			Test string `short:"t"`
 		}{}
-		flagSet, err = flagset.New(flagset.Options{Flags: &flags02})
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags02, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
@@ -2210,7 +2214,7 @@ func TestFlagSet_FlagByArg(t *testing.T) {
 				Baz string `long:"baz"`
 			} `command:"bar"`
 		}{}
-		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
@@ -2563,6 +2567,7 @@ func TestFlagSet_FlagArgs(t *testing.T) {
 					Qux string `short:"q"`
 				} `command:"baz"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2583,6 +2588,7 @@ func TestFlagSet_FlagArgs(t *testing.T) {
 				Foo bool   `short:"f"`
 				Bar string `long:"bar"`
 			} `command:"command"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2605,6 +2611,7 @@ func TestFlagSet_FlagArgs(t *testing.T) {
 				Foo bool   `short:"f"`
 				Bar string `long:"bar"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2629,6 +2636,7 @@ func TestFlagSet_FlagArgs(t *testing.T) {
 					Qux string `short:"q"`
 				} `command:"baz"`
 			} `command:"foo"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2663,7 +2671,7 @@ func TestFlagSet_Flags(t *testing.T) {
 			Uint64  uint64  `short:"U" long:"uint64"`
 			String  string  `short:"s" long:"string"`
 		}{}
-		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
+		flagSet, err := flagset.New(flagset.Options{Flags: &flags, Args: []string{}})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)

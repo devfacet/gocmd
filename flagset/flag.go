@@ -45,29 +45,30 @@ var (
 
 // Flag represents a flag
 type Flag struct {
-	id           int
-	name         string
-	short        string
-	long         string
-	command      string
-	description  string
-	required     bool // flag must be present
-	nonempty     bool // if the flag is present then it must have a value
-	global       bool
-	env          string
-	delimiter    string
-	valueDefault string
-	valueType    string
-	valueBy      string
-	value        interface{}
-	kind         string
-	fieldIndex   []int // for reflect
-	parentIndex  []int // for reflect
-	parentID     int
-	commandID    int
-	args         []*Arg
-	err          error
-	updatedBy    []string // for debug
+	id              int
+	name            string
+	short           string
+	long            string
+	command         string
+	description     string
+	required        bool // flag must be present
+	nonempty        bool // if the flag is present then it must have a value
+	allowUnknownArg bool // allow unknown arguments to be present
+	global          bool
+	delimiter       string
+	env             string
+	valueDefault    string
+	valueType       string
+	valueBy         string
+	value           interface{}
+	kind            string
+	fieldIndex      []int // for reflect
+	parentIndex     []int // for reflect
+	parentID        int
+	commandID       int
+	args            []*Arg
+	err             error
+	updatedBy       []string // for debug
 }
 
 // ID returns the id of the flag

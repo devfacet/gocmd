@@ -654,7 +654,8 @@ func TestFlagSet(t *testing.T) {
 			CommandBar struct {
 				String     string `short:"s"`
 				CommandQux struct {
-					String string `short:"s"`
+					String   string `short:"s"`
+					Settings bool   `settings:"true" allow-unknown-arg:"true"`
 				} `command:"qux"`
 			} `command:"bar"`
 		}{}
@@ -691,6 +692,51 @@ func TestFlagSet(t *testing.T) {
 		So(flagSet.flags[4].args, ShouldHaveLength, 3)
 		So(flagSet.flags[5].args, ShouldNotBeNil)
 		So(flagSet.flags[5].args, ShouldHaveLength, 1)
+	})
+}
+
+func TestFlagSet_settingByID(t *testing.T) {
+	Convey("should return nil when the setting id is not valid", t, func() {
+		flagSet, err := New(Options{Flags: &struct{}{}})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.settingByID(-1), ShouldBeNil)
+	})
+
+	Convey("should return nil when the setting id doesn't exist", t, func() {
+		flags01 := struct {
+			Settings bool `settings:"true"`
+		}{}
+		args := []string{
+			"./app",
+		}
+		flagSet, err := New(Options{Flags: &flags01, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.settingByID(1), ShouldBeNil)
+	})
+}
+
+func TestFlagSet_commandByID(t *testing.T) {
+	Convey("should return nil when the command id is not valid", t, func() {
+		flagSet, err := New(Options{Flags: &struct{}{}})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.commandByID(-1), ShouldBeNil)
+	})
+
+	Convey("should return nil when the command id doesn't exist", t, func() {
+		flags01 := struct {
+			CommandBar struct {
+			} `command:"bar"`
+		}{}
+		args := []string{
+			"./app",
+		}
+		flagSet, err := New(Options{Flags: &flags01, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.commandByID(1), ShouldBeNil)
 	})
 }
 
@@ -733,8 +779,41 @@ func TestFlagSet_flagByIndex(t *testing.T) {
 	})
 }
 
+func TestFlagSet_parseSettings(t *testing.T) {
+	Convey("should parse settings", t, func() {
+		flagset := FlagSet{}
+		So(flagset.settingsParsed, ShouldEqual, false)
+		So(flagset.commandsParsed, ShouldEqual, false)
+		So(flagset.argsParsed, ShouldEqual, false)
+		flagset.parseSettings()
+		flagset.parseSettings()
+		So(flagset.settingsParsed, ShouldEqual, true)
+
+		flags01 := struct {
+			CommandBar struct {
+			} `command:"bar"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
+			Foo      bool `settings:"true" allow-unknown-arg:"true"`
+		}{}
+		args := []string{
+			"./app",
+		}
+		flagSet, err := New(Options{Flags: &flags01, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors := flagSet.Errors()
+		So(flagErrors, ShouldContain, errors.New("duplicate settings tag for `Foo` and `Settings` flags"))
+	})
+}
+
 func TestFlagSet_parseCommands(t *testing.T) {
 	Convey("should parse commands", t, func() {
+		flagset := FlagSet{}
+		So(flagset.commandsParsed, ShouldEqual, false)
+		flagset.parseArgs()
+		flagset.parseCommands()
+		So(flagset.commandsParsed, ShouldEqual, true)
+
 		flags01 := struct {
 			CommandBar struct {
 			} `command:"bar"`
@@ -1101,6 +1180,7 @@ func TestFlagSet_parseCommands(t *testing.T) {
 			CommandQux struct {
 				Foo bool `short:"f"`
 			} `command:"qux"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -1287,6 +1367,7 @@ func TestFlagSet_parseCommands(t *testing.T) {
 					bar bool `short:"b"`
 				} `command:"foo"`
 			} `command:"baz"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -1336,6 +1417,7 @@ func TestFlagSet_parseCommands(t *testing.T) {
 					String string `short:"s"`
 				} `command:"qux"`
 			} `command:"bar"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -1384,6 +1466,7 @@ func TestFlagSet_parseCommands(t *testing.T) {
 					bar bool `short:"b"`
 				} `command:"foo"`
 			} `command:"baz"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -1424,6 +1507,13 @@ func TestFlagSet_parseCommands(t *testing.T) {
 
 func TestFlagSet_parseArgs(t *testing.T) {
 	Convey("should parse arguments", t, func() {
+		flagset := FlagSet{}
+		So(flagset.argsParsed, ShouldEqual, false)
+		So(flagset.commandsParsed, ShouldEqual, false)
+		flagset.parseArgs()
+		So(flagset.argsParsed, ShouldEqual, true)
+		So(flagset.commandsParsed, ShouldEqual, true)
+
 		flags01 := struct {
 			Foo bool `short:"f"`
 		}{}
@@ -2719,6 +2809,7 @@ func TestFlagSet_parseArgs(t *testing.T) {
 					Quux bool `short:"q"`
 				} `command:"qux"`
 			} `command:"bar"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2820,6 +2911,7 @@ func TestFlagSet_parseArgs(t *testing.T) {
 					String string `short:"s"`
 				} `command:"qux"`
 			} `command:"bar"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",
@@ -2982,6 +3074,7 @@ func TestFlagSet_parseArgs(t *testing.T) {
 					Quux bool `short:"q"`
 				} `command:"qux"`
 			} `command:"bar"`
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
 		}{}
 		args = []string{
 			"./app",

@@ -12,6 +12,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -35,7 +36,6 @@ func New(o Options) (*FlagSet, error) {
 			return nil, fmt.Errorf("flags must be a struct pointer")
 		}
 	}
-
 	if o.Args == nil {
 		o.Args = os.Args // default
 	}
@@ -45,9 +45,9 @@ func New(o Options) (*FlagSet, error) {
 		flagsRaw: o.Flags,
 		argsRaw:  make([]string, len(o.Args)),
 	}
-	copy(flagSet.argsRaw, o.Args) // take a copy
+	copy(flagSet.argsRaw, o.Args) // make a copy
 
-	// Parse flags and args
+	// Parse flags
 	if flagSet.flagsRaw != nil {
 		var errs []error
 		flagSet.flags, errs = structToFlags(flagSet.flagsRaw)
@@ -55,29 +55,20 @@ func New(o Options) (*FlagSet, error) {
 			return nil, errs[0] // return the first error
 		}
 	}
+	flagSet.parseCommands()
 	flagSet.parseArgs()
-
-	// Iterate over the flags and check the global arguments
-	for _, flag := range flagSet.flags {
-		if !flag.global {
-			continue // skip non global flags
-		}
-
-		if flag.kind == "command" {
-			flag.err = fmt.Errorf("command %s can't be global", flag.command)
-			continue
-		}
-
-		if flag.kind == "arg" && flag.parentID > -1 {
-			flag.err = fmt.Errorf("argument %s can't be global", flag.FormattedArg())
-			continue
-		}
-	}
+	flagSet.parseSettings()
 
 	// Iterate over the flags and apply values to the fields
 	for _, flag := range flagSet.flags {
 		// Only argument fields can have values
 		if flag.kind != "arg" {
+			continue
+		}
+
+		// Check global
+		if flag.kind == "arg" && flag.global && flag.parentID > -1 {
+			flag.err = fmt.Errorf("argument %s can't be global", flag.FormattedArg())
 			continue
 		}
 
@@ -105,9 +96,8 @@ func New(o Options) (*FlagSet, error) {
 				}
 			}
 
-			// Do not continue if the argument has an error
 			if arg.err != nil {
-				continue
+				continue // do not continue if the argument has an error
 			}
 
 			// Update the flag value
@@ -235,6 +225,15 @@ func New(o Options) (*FlagSet, error) {
 		}
 	}
 
+	// Iterate over the arguments and find the unknown arguments
+	for k, arg := range flagSet.args {
+		if k > 0 && arg.kind == "arg" && arg.flagID == -1 {
+			if s := flagSet.settingByID(arg.settingsID); s == nil || !s.allowUnknownArg {
+				arg.err = fmt.Errorf("unknown argument: %s%s", arg.dash, arg.name)
+			}
+		}
+	}
+
 	return &flagSet, nil
 }
 
@@ -247,6 +246,116 @@ type FlagSet struct {
 	argsParsed     bool
 	commands       []*Command
 	commandsParsed bool
+	settings       []*Setting
+	settingsParsed bool
+}
+
+// parseSettings parses the flags and update the settings
+func (flagSet *FlagSet) parseSettings() {
+	if flagSet.settingsParsed {
+		return // do not parse second time
+	}
+	if !flagSet.commandsParsed {
+		flagSet.parseCommands()
+	}
+	if !flagSet.argsParsed {
+		flagSet.parseArgs()
+	}
+
+	// Iterate over the flags and update settings
+	newFlags := []*Flag{}
+	dup := make(map[int]string)
+	for _, flag := range flagSet.flags {
+		if flag.kind == "settings" {
+			setting := Setting{
+				id:              len(flagSet.settings),
+				parentID:        flag.parentID,
+				allowUnknownArg: flag.allowUnknownArg,
+			}
+			if v, ok := dup[flag.parentID]; ok {
+				setting.err = fmt.Errorf("duplicate settings tag for `%s` and `%s` flags", flag.name, v)
+			}
+			dup[flag.parentID] = flag.name
+			flagSet.settings = append(flagSet.settings, &setting)
+		} else {
+			newFlags = append(newFlags, flag)
+		}
+	}
+	flagSet.flags = newFlags
+	sort.SliceStable(flagSet.settings, func(i, j int) bool { return flagSet.settings[i].parentID < flagSet.settings[j].parentID })
+
+	// Iterate over the settings and update the arg settings
+	for _, setting := range flagSet.settings {
+		// Iterate over the arguments
+		for k, arg := range flagSet.args {
+			if k == 0 {
+				continue
+			}
+			// If it's a top level settings then
+			if setting.parentID == -1 {
+				arg.settingsID = setting.id
+				continue
+			}
+			// Otherwise check whether the setting is prior to argument or not
+			if c := flagSet.commandByID(arg.commandID); c != nil && c.flagID >= setting.parentID {
+				arg.settingsID = setting.id
+			}
+		}
+	}
+
+	flagSet.settingsParsed = true
+}
+
+// settingByID returns a setting by the given id or returns nil if it doesn't exist
+func (flagSet *FlagSet) settingByID(id int) *Setting {
+	if id < 0 {
+		return nil
+	}
+	for _, v := range flagSet.settings {
+		if v.id == id {
+			return v
+		}
+	}
+	return nil
+}
+
+// commandByID returns a command by the given id or returns nil if it doesn't exist
+func (flagSet *FlagSet) commandByID(id int) *Command {
+	if id < 0 {
+		return nil
+	}
+	for _, v := range flagSet.commands {
+		if v.id == id {
+			return v
+		}
+	}
+	return nil
+}
+
+// flagByID returns a flag by the given id or returns nil if it doesn't exist
+func (flagSet *FlagSet) flagByID(id int) *Flag {
+	if id < 0 {
+		return nil
+	}
+	for _, v := range flagSet.flags {
+		if v.id == id {
+			return v
+		}
+	}
+	return nil
+}
+
+// flagByIndex returns a flag by the given field index or returns nil if it doesn't exist
+func (flagSet *FlagSet) flagByIndex(index []int) *Flag {
+	if index == nil {
+		return nil
+	}
+	for _, v := range flagSet.flags {
+		if fmt.Sprint(v.fieldIndex) == fmt.Sprint(index) { // faster then reflect.DeepEqual
+			return v
+		}
+	}
+	return nil
 }
 
 // FlagByName returns a flag by the given name or returns nil if it doesn't exist
@@ -309,32 +418,6 @@ func (flagSet *FlagSet) FlagByArg(arg, command string) *Flag {
 	}
 
 	return result
-}
-
-// flagByID returns a flag by the given id or returns nil if it doesn't exist
-func (flagSet *FlagSet) flagByID(id int) *Flag {
-	if id < 0 {
-		return nil
-	}
-	for _, v := range flagSet.flags {
-		if v.id == id {
-			return v
-		}
-	}
-	return nil
-}
-
-// flagByIndex returns a flag by the given field index or returns nil if it doesn't exist
-func (flagSet *FlagSet) flagByIndex(index []int) *Flag {
-	if index == nil {
-		return nil
-	}
-	for _, v := range flagSet.flags {
-		if fmt.Sprint(v.fieldIndex) == fmt.Sprint(index) { // faster then reflect.DeepEqual
-			return v
-		}
-	}
-	return nil
 }
 
 // FlagArgs returns the flag arguments those exist in the argument list
@@ -403,11 +486,25 @@ func (flagSet *FlagSet) Errors() []error {
 			result = append(result, arg.err)
 		}
 	}
+	for _, command := range flagSet.commands {
+		if command != nil && command.err != nil {
+			result = append(result, command.err)
+		}
+	}
+	for _, setting := range flagSet.settings {
+		if setting != nil && setting.err != nil {
+			result = append(result, setting.err)
+		}
+	}
 	return result
 }
 
 // parseCommands parses the raw arguments and updates the commands
 func (flagSet *FlagSet) parseCommands() {
+	if flagSet.commandsParsed {
+		return // do not parse second time
+	}
+
 	// Init vars
 	flagSet.commands = make([]*Command, 0) // reset
 
@@ -515,6 +612,9 @@ func (flagSet *FlagSet) parseCommands() {
 		for _, flag := range flagSet.flags {
 			if cmd.flagID == flag.id {
 				flag.commandID = cmd.id
+				if flag.global {
+					cmd.err = fmt.Errorf("command %s can't be global", flag.command)
+				}
 				break
 			}
 		}
@@ -525,12 +625,11 @@ func (flagSet *FlagSet) parseCommands() {
 
 // parseArgs parses the raw arguments and updates the arguments
 func (flagSet *FlagSet) parseArgs() {
-	// Commands must be parsed before arguments
+	if flagSet.argsParsed {
+		return // do not parse second time
+	}
 	if !flagSet.commandsParsed {
 		flagSet.parseCommands()
-	} else if flagSet.argsParsed {
-		// Do not parse second time
-		return
 	}
 
 	// Init vars
@@ -540,14 +639,15 @@ func (flagSet *FlagSet) parseArgs() {
 	for argIndex, argVal := range flagSet.argsRaw {
 		// Init the new argument
 		newArg := Arg{
-			id:        argIndex,
-			arg:       argVal,
-			flagID:    -1,
-			commandID: -1,
-			parentID:  -1,
-			valueID:   -1,
-			indexFrom: argIndex,
-			indexTo:   argIndex + 1,
+			id:         argIndex,
+			arg:        argVal,
+			flagID:     -1,
+			commandID:  -1,
+			settingsID: -1,
+			parentID:   -1,
+			valueID:    -1,
+			indexFrom:  argIndex,
+			indexTo:    argIndex + 1,
 		}
 
 		// Check commands
@@ -971,7 +1071,7 @@ func structToFlags(value interface{}) ([]*Flag, []error) {
 	for k, field := range fields {
 		flag := structFieldToFlag(field)
 		if flag.kind == "" {
-			continue // ship the non flag fields
+			continue // skip the non flag fields
 		}
 		flag.id = k
 		flag.fieldIndex = field.index
@@ -1010,44 +1110,49 @@ type structField struct {
 // structFieldToFlag returns a new flag by the given struct field
 func structFieldToFlag(sf structField) Flag {
 	flag := Flag{
-		id:           -1,
-		name:         sf.field.Name,
-		short:        strings.TrimSpace(sf.field.Tag.Get("short")),
-		long:         strings.TrimSpace(sf.field.Tag.Get("long")),
-		command:      strings.TrimSpace(sf.field.Tag.Get("command")),
-		description:  strings.TrimSpace(sf.field.Tag.Get("description")),
-		required:     false,
-		nonempty:     false,
-		global:       false,
-		env:          strings.TrimSpace(sf.field.Tag.Get("env")),
-		delimiter:    sf.field.Tag.Get("delimiter"),
-		valueDefault: strings.TrimSpace(sf.field.Tag.Get("default")),
-		valueType:    sf.field.Type.String(),
-		valueBy:      "",
-		value:        nil,
-		kind:         "",
-		fieldIndex:   nil,
-		parentIndex:  nil,
-		parentID:     -1,
-		commandID:    -1,
-		args:         nil,
-		err:          nil,
-		updatedBy:    nil,
+		id:              -1,
+		name:            sf.field.Name,
+		short:           strings.TrimSpace(sf.field.Tag.Get("short")),
+		long:            strings.TrimSpace(sf.field.Tag.Get("long")),
+		command:         strings.TrimSpace(sf.field.Tag.Get("command")),
+		description:     strings.TrimSpace(sf.field.Tag.Get("description")),
+		required:        false,
+		nonempty:        false,
+		global:          false,
+		delimiter:       sf.field.Tag.Get("delimiter"),
+		env:             strings.TrimSpace(sf.field.Tag.Get("env")),
+		valueDefault:    strings.TrimSpace(sf.field.Tag.Get("default")),
+		valueType:       sf.field.Type.String(),
+		valueBy:         "",
+		value:           nil,
+		kind:            "",
+		allowUnknownArg: false,
+		fieldIndex:      nil,
+		parentIndex:     nil,
+		parentID:        -1,
+		commandID:       -1,
+		args:            nil,
+		err:             nil,
+		updatedBy:       nil,
 	}
-	if v := sf.field.Tag.Get("required"); v == "true" {
+	if sf.field.Tag.Get("required") == "true" {
 		flag.required = true
 		// If the flag is required then it's value should not be empty (i.e. `-foo= -foo="" -foo=''`)
 		// For overriding this behavior use `required:"true" nonempty:"false"`
 		flag.nonempty = true
 	}
 
-	if v := sf.field.Tag.Get("nonempty"); v == "true" {
+	if sf.field.Tag.Get("nonempty") == "true" {
 		flag.nonempty = true
 	} else if v := sf.field.Tag.Get("nonempty"); v == "false" {
 		flag.nonempty = false
 	}
 
-	if v := sf.field.Tag.Get("global"); v == "true" {
+	if sf.field.Tag.Get("allow-unknown-arg") == "true" {
+		flag.allowUnknownArg = true
+	}
+
+	if sf.field.Tag.Get("global") == "true" {
 		flag.global = true
 	}
 
@@ -1065,6 +1170,8 @@ func structFieldToFlag(sf structField) Flag {
 	} else if flag.command != "" && strings.HasPrefix(flag.valueType, "struct") {
 		flag.kind = "command"
 		flag.valueType = "struct"
+	} else if sf.field.Tag.Get("settings") == "true" {
+		flag.kind = "settings"
 	}
 
 	return flag
