@@ -323,6 +323,12 @@ func ExampleNew_command() {
 		log.Fatal(err)
 	}
 
+	// Echo command
+	if cmd.FlagArgs("Echo") != nil {
+		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
+		return
+	}
+
 	// Math command
 	if cmd.FlagArgs("Math") != nil {
 		if cmd.FlagArgs("Math.Sqrt") != nil {
@@ -332,12 +338,6 @@ func ExampleNew_command() {
 		} else {
 			log.Fatal("invalid math command")
 		}
-		return
-	}
-
-	// Echo command
-	if cmd.FlagArgs("Echo") != nil {
-		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
 		return
 	}
 	// Output:

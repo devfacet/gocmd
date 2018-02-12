@@ -13,6 +13,7 @@ A Go library for building command line applications.
 	- Support for environment variables
 	- Well formatted usage printing
 	- Auto usage and version printing
+	- Unknown argument handling
 - Output tables in the terminal
 - Template support for config files
 - No external dependency
@@ -62,6 +63,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Echo command
+	if cmd.FlagArgs("Echo") != nil {
+		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
+		return
+	}
+
 	// Math command
 	if cmd.FlagArgs("Math") != nil {
 		if cmd.FlagArgs("Math.Sqrt") != nil {
@@ -71,12 +78,6 @@ func main() {
 		} else {
 			log.Fatal("invalid math command")
 		}
-		return
-	}
-
-	// Echo command
-	if cmd.FlagArgs("Echo") != nil {
-		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
 		return
 	}
 }
