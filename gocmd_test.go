@@ -11,6 +11,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/devfacet/gocmd"
@@ -222,7 +223,10 @@ func ExampleNew_usage() {
 			Help      bool `short:"h" long:"help" description:"Display usage" global:"true"`
 			Version   bool `short:"v" long:"version" description:"Display version"`
 			VersionEx bool `long:"vv" description:"Display version (extended)"`
-			Math      struct {
+			Echo      struct {
+				Settings bool `settings:"true" allow-unknown-arg:"true"`
+			} `command:"echo" description:"Print arguments"`
+			Math struct {
 				Sqrt struct {
 					Number float64 `short:"n" long:"number" required:"true" description:"Number"`
 				} `command:"sqrt" description:"Calculate square root"`
@@ -239,6 +243,7 @@ func ExampleNew_usage() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// Output:
 	// Usage: basic [options...] COMMAND [options...]
 	//
@@ -250,6 +255,7 @@ func ExampleNew_usage() {
 	//       --vv           	Display version (extended)
 	//
 	// Commands:
+	//   echo               	Print arguments
 	//   math               	Math functions
 	//     sqrt             	Calculate square root
 	//       -n, --number   	Number
@@ -268,17 +274,15 @@ func ExampleNew_version() {
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags: &struct {
-			Help      bool `short:"h" long:"help" description:"Display usage" global:"true"`
 			Version   bool `short:"v" long:"version" description:"Display version"`
 			VersionEx bool `long:"vv" description:"Display version (extended)"`
 		}{},
-		AutoHelp:    true,
 		AutoVersion: true,
-		AnyError:    true,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// Output:
 	// App name    : basic
 	// App version : 1.0.0
@@ -294,7 +298,10 @@ func ExampleNew_command() {
 		Help      bool `short:"h" long:"help" description:"Display usage" global:"true"`
 		Version   bool `short:"v" long:"version" description:"Display version"`
 		VersionEx bool `long:"vv" description:"Display version (extended)"`
-		Math      struct {
+		Echo      struct {
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
+		} `command:"echo" description:"Print arguments"`
+		Math struct {
 			Sqrt struct {
 				Number float64 `short:"n" long:"number" required:"true" description:"Number"`
 			} `command:"sqrt" description:"Calculate square root"`
@@ -318,6 +325,7 @@ func ExampleNew_command() {
 		log.Fatal(err)
 	}
 
+	// Math command
 	if cmd.FlagArgs("Math") != nil {
 		if cmd.FlagArgs("Math.Sqrt") != nil {
 			fmt.Println(math.Sqrt(flags.Math.Sqrt.Number))
@@ -328,6 +336,13 @@ func ExampleNew_command() {
 		}
 		return
 	}
+
+	// Echo command
+	if cmd.FlagArgs("Echo") != nil {
+		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
+		return
+	}
+
 	// Output:
 	// 3
 
@@ -341,5 +356,6 @@ func ExampleCmd_PrintVersion() {
 	if err == nil {
 		cmd.PrintVersion(false)
 	}
+
 	// Output: 1.0.0
 }

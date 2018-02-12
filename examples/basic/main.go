@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 
 	"github.com/devfacet/gocmd"
 )
@@ -14,7 +15,10 @@ func main() {
 		Help      bool `short:"h" long:"help" description:"Display usage" global:"true"`
 		Version   bool `short:"v" long:"version" description:"Display version"`
 		VersionEx bool `long:"vv" description:"Display version (extended)"`
-		Math      struct {
+		Echo      struct {
+			Settings bool `settings:"true" allow-unknown-arg:"true"`
+		} `command:"echo" description:"Print arguments"`
+		Math struct {
 			Sqrt struct {
 				Number float64 `short:"n" long:"number" required:"true" description:"Number"`
 			} `command:"sqrt" description:"Calculate square root"`
@@ -38,6 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Math command
 	if cmd.FlagArgs("Math") != nil {
 		if cmd.FlagArgs("Math.Sqrt") != nil {
 			fmt.Println(math.Sqrt(flags.Math.Sqrt.Number))
@@ -46,6 +51,12 @@ func main() {
 		} else {
 			log.Fatal("invalid math command")
 		}
+		return
+	}
+
+	// Echo command
+	if cmd.FlagArgs("Echo") != nil {
+		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
 		return
 	}
 }
