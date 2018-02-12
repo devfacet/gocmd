@@ -243,7 +243,6 @@ func ExampleNew_usage() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// Output:
 	// Usage: basic [options...] COMMAND [options...]
 	//
@@ -282,7 +281,6 @@ func ExampleNew_version() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// Output:
 	// App name    : basic
 	// App version : 1.0.0
@@ -342,7 +340,6 @@ func ExampleNew_command() {
 		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
 		return
 	}
-
 	// Output:
 	// 3
 
@@ -356,6 +353,5 @@ func ExampleCmd_PrintVersion() {
 	if err == nil {
 		cmd.PrintVersion(false)
 	}
-
 	// Output: 1.0.0
 }
