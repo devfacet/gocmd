@@ -532,6 +532,52 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
 		So(flags07.Foo, ShouldEqual, true)
+
+		flags08 := struct {
+			Flag    string   `short:"f" long:"flag" required:"true"`
+			Command struct{} `command:"command"`
+		}{}
+		args = []string{
+			"./app",
+			"-f",
+			"\"command\"",
+		}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags08, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags09 := struct {
+			Flag    string   `short:"f" long:"flag" required:"true"`
+			Command struct{} `command:"command"`
+		}{}
+		args = []string{
+			"./app",
+			"-f",
+			"'command'",
+		}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags09, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags10 := struct {
+			Flag    string   `short:"f" long:"flag" required:"true"`
+			Command struct{} `command:"command"`
+		}{}
+		args = []string{
+			"./app",
+			"-f",
+			"command",
+		}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags10, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldNotBeNil)
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
 	})
 
 	Convey("should return correct flag errors (nonempty)", t, func() {
