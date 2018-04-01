@@ -72,6 +72,11 @@ func New(o Options) (*FlagSet, error) {
 			continue
 		}
 
+		// Handle slices
+		if strings.HasPrefix(flag.valueType, "[]") {
+			flagSet.unsetFlag(flag.id)
+		}
+
 		// Iterate over the args (last argument wins)
 		for _, arg := range flag.args {
 			// Only arguments (skip commands and argument values)
