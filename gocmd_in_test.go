@@ -120,7 +120,7 @@ func TestCmd_usageContent(t *testing.T) {
 }
 
 func TestCmd_isTest(t *testing.T) {
-	Convey("should return whether it's a test or not", t, func() {
+	Convey("should return whether it's a test", t, func() {
 		cmd, err := New(Options{Name: "test"})
 		So(err, ShouldBeNil)
 		So(cmd, ShouldNotBeNil)
@@ -138,6 +138,17 @@ func TestCmd_isTest(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(cmd, ShouldNotBeNil)
 		So(cmd.isTest(), ShouldEqual, false)
+		resetArgs()
+	})
+}
+
+func TestCmd_exit(t *testing.T) {
+	Convey("should not exit", t, func() {
+		os.Args = []string{"gocmd.test"}
+		cmd, err := New(Options{Name: "test"})
+		So(err, ShouldBeNil)
+		So(cmd, ShouldNotBeNil)
+		cmd.exit()
 		resetArgs()
 	})
 }

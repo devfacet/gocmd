@@ -79,9 +79,7 @@ func New(o Options) (*Cmd, error) {
 
 			if ver || verEx {
 				cmd.PrintVersion(verEx)
-				if !cmd.isTest() {
-					os.Exit(0)
-				}
+				cmd.exit()
 			}
 		}
 
@@ -107,9 +105,7 @@ func New(o Options) (*Cmd, error) {
 
 			if help {
 				cmd.PrintUsage()
-				if !cmd.isTest() {
-					os.Exit(0)
-				}
+				cmd.exit()
 			}
 		}
 	}
@@ -345,7 +341,7 @@ func (cmd *Cmd) usageContent() string {
 
 func (cmd *Cmd) isTest() bool {
 	if len(os.Args) > 0 {
-		if strings.HasSuffix(os.Args[0], "gocmd.test") {
+		if strings.Contains(os.Args[0], "gocmd.test") {
 			return true
 		}
 		for _, v := range os.Args {
@@ -355,4 +351,10 @@ func (cmd *Cmd) isTest() bool {
 		}
 	}
 	return false
+}
+
+func (cmd *Cmd) exit() {
+	if !cmd.isTest() {
+		os.Exit(0)
+	}
 }
