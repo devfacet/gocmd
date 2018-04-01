@@ -1183,16 +1183,16 @@ func typeToStructField(value reflect.Type, parentIndex []int) []structField {
 		return nil
 	}
 
+	// Copy parentIndex
+	pi := make([]int, len(parentIndex))
+	copy(pi, parentIndex)
+
 	// Iterate over the fields
 	var result []structField
 	l := value.NumField()
 	for i := 0; i < l; i++ {
 		field := value.Field(i)
-		sf := structField{
-			field:       field,
-			index:       append(parentIndex, field.Index...),
-			parentIndex: parentIndex,
-		}
+		sf := structField{field: field, index: append(pi, field.Index...), parentIndex: parentIndex}
 		result = append(result, sf)
 
 		// Check nested fields
