@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.2 (2018-04-01)
+
+- Fix slice flag value issue
+
 ## v3.0.1 (2018-04-01)
 
 - Fix field index issue
