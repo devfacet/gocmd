@@ -14,7 +14,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestFlagSet(t *testing.T) {
+func TestFlagSet_1(t *testing.T) {
 	Convey("should return the correct flag set and values", t, func() {
 		flags01 := struct {
 			Default  bool      `short:"d" long:"default" default:"false" description:"Default argument"`
@@ -647,51 +647,159 @@ func TestFlagSet(t *testing.T) {
 				So(fmt.Sprint(flags01.Command), ShouldEqual, fmt.Sprint(v.value))
 			}
 		}
+	})
+}
+
+func TestFlagSet_2(t *testing.T) {
+	Convey("should return the correct flag set and values", t, func() {
+		flags01 := struct {
+			String1    string `long:"s1"`
+			String2    string `long:"s2"`
+			CommandFoo struct {
+				String3    string `long:"s3"`
+				String4    string `long:"s4"`
+				CommandBar struct {
+					String5    string `long:"s5"`
+					String6    string `long:"s6"`
+					CommandBaz struct {
+						String7    string `long:"s7"`
+						String8    string `long:"s8"`
+						CommandQux struct {
+							String9  string `long:"s9"`
+							String10 string `long:"s10"`
+						} `command:"qux"`
+					} `command:"baz"`
+				} `command:"bar"`
+			} `command:"foo"`
+		}{}
+		args := []string{
+			"./app",
+			"--s1=foo1",
+			"foo",
+			"--s3=foo3",
+			"bar",
+			"--s5=foo5",
+			"baz",
+			"--s7=foo7",
+			"qux",
+			"--s9=foo9",
+		}
+		flagSet, err := New(Options{Flags: &flags01, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flagSet.flags, ShouldHaveLength, 14)
+		So(flags01.String1, ShouldEqual, "foo1")
+		So(flags01.String2, ShouldEqual, "")
+		So(flags01.CommandFoo.String3, ShouldEqual, "foo3")
+		So(flags01.CommandFoo.String4, ShouldEqual, "")
+		So(flags01.CommandFoo.CommandBar.String5, ShouldEqual, "foo5")
+		So(flags01.CommandFoo.CommandBar.String6, ShouldEqual, "")
+		So(flags01.CommandFoo.CommandBar.CommandBaz.String7, ShouldEqual, "foo7")
+		So(flags01.CommandFoo.CommandBar.CommandBaz.String8, ShouldEqual, "")
+		So(flags01.CommandFoo.CommandBar.CommandBaz.CommandQux.String9, ShouldEqual, "foo9")
+		So(flags01.CommandFoo.CommandBar.CommandBaz.CommandQux.String10, ShouldEqual, "")
 
 		flags02 := struct {
-			Foo        bool   `short:"f"`
-			String     string `short:"s"`
-			CommandBar struct {
-				String     string `short:"s"`
-				CommandQux struct {
-					String   string `short:"s"`
-					Settings bool   `settings:"true" allow-unknown-arg:"true"`
-				} `command:"qux"`
-			} `command:"bar"`
+			String1    string `long:"s1"`
+			String2    string `long:"s2"`
+			CommandFoo struct {
+				String3    string `long:"s3"`
+				String4    string `long:"s4"`
+				CommandBar struct {
+					String5    string `long:"s5"`
+					String6    string `long:"s6"`
+					CommandBaz struct {
+						String7    string `long:"s7"`
+						String8    string `long:"s8"`
+						CommandQux struct {
+							String9  string `long:"s9"`
+							String10 string `long:"s10"`
+						} `command:"qux"`
+					} `command:"baz"`
+				} `command:"bar"`
+			} `command:"foo"`
 		}{}
 		args = []string{
 			"./app",
-			"-f",
-			"-s",
-			"foo1",
-			"-s=foo2",
+			"--s2=foo2",
+			"foo",
+			"--s4=foo4",
 			"bar",
-			"-s=foo3",
+			"--s6=foo6",
+			"baz",
+			"--s8=foo8",
 			"qux",
-			"-s=foo4",
-			"quux",
+			"--s10=foo10",
 		}
 		flagSet, err = New(Options{Flags: &flags02, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
-		So(flags02.Foo, ShouldEqual, true)
-		So(flags02.String, ShouldEqual, "foo2")
-		So(flags02.CommandBar.String, ShouldEqual, "foo3")
-		So(flags02.CommandBar.CommandQux.String, ShouldEqual, "foo4")
-		So(flagSet.flags, ShouldHaveLength, 6)
-		So(flagSet.flags[0].args, ShouldNotBeNil)
-		So(flagSet.flags[0].args, ShouldHaveLength, 1)
-		So(flagSet.flags[1].args, ShouldNotBeNil)
-		So(flagSet.flags[1].args, ShouldHaveLength, 2)
-		So(flagSet.flags[2].args, ShouldNotBeNil)
-		So(flagSet.flags[2].args, ShouldHaveLength, 2)
-		So(flagSet.flags[3].args, ShouldNotBeNil)
-		So(flagSet.flags[3].args, ShouldHaveLength, 1)
-		So(flagSet.flags[4].args, ShouldNotBeNil)
-		So(flagSet.flags[4].args, ShouldHaveLength, 3)
-		So(flagSet.flags[5].args, ShouldNotBeNil)
-		So(flagSet.flags[5].args, ShouldHaveLength, 1)
+		So(flagSet.flags, ShouldHaveLength, 14)
+		So(flags02.String1, ShouldEqual, "")
+		So(flags02.String2, ShouldEqual, "foo2")
+		So(flags02.CommandFoo.String3, ShouldEqual, "")
+		So(flags02.CommandFoo.String4, ShouldEqual, "foo4")
+		So(flags02.CommandFoo.CommandBar.String5, ShouldEqual, "")
+		So(flags02.CommandFoo.CommandBar.String6, ShouldEqual, "foo6")
+		So(flags02.CommandFoo.CommandBar.CommandBaz.String7, ShouldEqual, "")
+		So(flags02.CommandFoo.CommandBar.CommandBaz.String8, ShouldEqual, "foo8")
+		So(flags02.CommandFoo.CommandBar.CommandBaz.CommandQux.String9, ShouldEqual, "")
+		So(flags02.CommandFoo.CommandBar.CommandBaz.CommandQux.String10, ShouldEqual, "foo10")
+
+		flags03 := struct {
+			String1    string `long:"s1"`
+			String2    string `long:"s2"`
+			CommandFoo struct {
+				String1    string `long:"s1"`
+				String2    string `long:"s2"`
+				CommandBar struct {
+					String1    string `long:"s1"`
+					String2    string `long:"s2"`
+					CommandBaz struct {
+						String1    string `long:"s1"`
+						String2    string `long:"s2"`
+						CommandQux struct {
+							String1 string `long:"s1"`
+							String2 string `long:"s2"`
+						} `command:"qux"`
+					} `command:"baz"`
+				} `command:"bar"`
+			} `command:"foo"`
+		}{}
+		args = []string{
+			"./app",
+			"--s1=foo1",
+			"--s2=foo2",
+			"foo",
+			"--s1=foo3",
+			"--s2=foo4",
+			"bar",
+			"--s1=foo5",
+			"--s2=foo6",
+			"baz",
+			"--s1=foo7",
+			"--s2=foo8",
+			"qux",
+			"--s1=foo9",
+			"--s2=foo10",
+		}
+		flagSet, err = New(Options{Flags: &flags03, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
+		So(flagSet.flags, ShouldHaveLength, 14)
+		So(flags03.String1, ShouldEqual, "foo1")
+		So(flags03.String2, ShouldEqual, "foo2")
+		So(flags03.CommandFoo.String1, ShouldEqual, "foo3")
+		So(flags03.CommandFoo.String2, ShouldEqual, "foo4")
+		So(flags03.CommandFoo.CommandBar.String1, ShouldEqual, "foo5")
+		So(flags03.CommandFoo.CommandBar.String2, ShouldEqual, "foo6")
+		So(flags03.CommandFoo.CommandBar.CommandBaz.String1, ShouldEqual, "foo7")
+		So(flags03.CommandFoo.CommandBar.CommandBaz.String2, ShouldEqual, "foo8")
+		So(flags03.CommandFoo.CommandBar.CommandBaz.CommandQux.String1, ShouldEqual, "foo9")
+		So(flags03.CommandFoo.CommandBar.CommandBaz.CommandQux.String2, ShouldEqual, "foo10")
 	})
 }
 
@@ -803,6 +911,21 @@ func TestFlagSet_parseSettings(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors := flagSet.Errors()
 		So(flagErrors, ShouldContain, errors.New("duplicate settings tag for `Foo` and `Settings` flags"))
+
+		flags02 := struct {
+			CommandBar struct {
+				Settings bool `settings:"true" allow-unknown-arg:"true"`
+			} `command:"bar"`
+		}{}
+		args = []string{
+			"./app",
+			"bar",
+			"foo",
+		}
+		flagSet, err = New(Options{Flags: &flags02, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.Errors(), ShouldBeNil)
 	})
 }
 

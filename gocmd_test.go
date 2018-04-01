@@ -265,6 +265,60 @@ func ExampleNew_usage() {
 	resetArgs()
 }
 
+func ExampleNew_usage_h() {
+	os.Args = []string{"gocmd.test", "-h"}
+
+	_, err := gocmd.New(gocmd.Options{
+		Name:        "basic",
+		Version:     "1.0.0",
+		Description: "A basic app",
+		Flags: &struct {
+			Help bool `short:"h" long:"help" description:"Display usage" global:"true"`
+		}{},
+		AutoHelp: true,
+		AnyError: true,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Output:
+	// Usage: basic [options...]
+	//
+	// A basic app
+	//
+	// Options:
+	//   -h, --help 	Display usage
+
+	resetArgs()
+}
+
+func ExampleNew_usage_help() {
+	os.Args = []string{"gocmd.test", "--help"}
+
+	_, err := gocmd.New(gocmd.Options{
+		Name:        "basic",
+		Version:     "1.0.0",
+		Description: "A basic app",
+		Flags: &struct {
+			Help bool `long:"help" description:"Display usage" global:"true"`
+		}{},
+		AutoHelp: true,
+		AnyError: true,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Output:
+	// Usage: basic [options...]
+	//
+	// A basic app
+	//
+	// Options:
+	//       --help 	Display usage
+
+	resetArgs()
+}
+
 func ExampleNew_version() {
 	os.Args = []string{"gocmd.test", "-vv"}
 
@@ -285,6 +339,48 @@ func ExampleNew_version() {
 	// App name    : basic
 	// App version : 1.0.0
 	// Go version  : vTest
+
+	resetArgs()
+}
+
+func ExampleNew_version_v() {
+	os.Args = []string{"gocmd.test", "-v"}
+
+	_, err := gocmd.New(gocmd.Options{
+		Name:        "basic",
+		Version:     "1.0.0",
+		Description: "A basic app",
+		Flags: &struct {
+			Version bool `short:"v" long:"version" description:"Display version"`
+		}{},
+		AutoVersion: true,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Output:
+	// 1.0.0
+
+	resetArgs()
+}
+
+func ExampleNew_version_version() {
+	os.Args = []string{"gocmd.test", "--version"}
+
+	_, err := gocmd.New(gocmd.Options{
+		Name:        "basic",
+		Version:     "1.0.0",
+		Description: "A basic app",
+		Flags: &struct {
+			Version bool `long:"version" description:"Display version"`
+		}{},
+		AutoVersion: true,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Output:
+	// 1.0.0
 
 	resetArgs()
 }
