@@ -364,7 +364,7 @@ func (flagSet *FlagSet) flagByIndex(index []int) *Flag {
 }
 
 // FlagByName returns a flag by the given name or returns nil if it doesn't exist
-// Nested commands are separated by dot (i.e. Foo.Bar)
+// Nested flags are separated by dot (i.e. Foo.Bar)
 func (flagSet *FlagSet) FlagByName(name string) *Flag {
 	if name == "" {
 		return nil
@@ -397,7 +397,7 @@ func (flagSet *FlagSet) FlagByName(name string) *Flag {
 }
 
 // FlagByArg returns a flag by the given argument name or returns nil if it doesn't exist
-// Nested commands are separated by dot (i.e. Foo.Bar)
+// Nested flags are separated by dot (i.e. Foo.Bar)
 func (flagSet *FlagSet) FlagByArg(arg, command string) *Flag {
 	if arg == "" {
 		return nil
@@ -428,7 +428,7 @@ func (flagSet *FlagSet) FlagByArg(arg, command string) *Flag {
 // FlagArgs returns the flag arguments those exist in the argument list
 // If the flag is an argument then it return it's values (i.e. [foo bar] for `-f=foo -f=bar`)
 // If it's a command then it returns the command name and the rest of the arguments (i.e. [command -f=true --bar=baz qux] for `command -f --bar=baz qux`).
-// Nested commands are separated by dot (i.e. Foo.Bar)
+// Nested flags are separated by dot (i.e. Foo.Bar)
 func (flagSet *FlagSet) FlagArgs(name string) []string {
 	if name == "" {
 		return nil
