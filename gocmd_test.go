@@ -288,7 +288,7 @@ func TestHandleFlag(t *testing.T) {
 func ExampleNew_usage() {
 	os.Args = []string{"gocmd.test"}
 
-	_, err := gocmd.New(gocmd.Options{
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
@@ -309,13 +309,8 @@ func ExampleNew_usage() {
 				} `command:"pow" description:"Calculate base exponential"`
 			} `command:"math" description:"Math functions"`
 		}{},
-		AutoHelp:    true,
-		AutoVersion: true,
-		AnyError:    true,
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Output:
 	// Usage: basic [options...] COMMAND [options...]
 	//
@@ -341,19 +336,15 @@ func ExampleNew_usage() {
 func ExampleNew_usage_h() {
 	os.Args = []string{"gocmd.test", "-h"}
 
-	_, err := gocmd.New(gocmd.Options{
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags: &struct {
 			Help bool `short:"h" long:"help" description:"Display usage" global:"true"`
 		}{},
-		AutoHelp: true,
-		AnyError: true,
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Output:
 	// Usage: basic [options...]
 	//
@@ -368,19 +359,15 @@ func ExampleNew_usage_h() {
 func ExampleNew_usage_help() {
 	os.Args = []string{"gocmd.test", "--help"}
 
-	_, err := gocmd.New(gocmd.Options{
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags: &struct {
 			Help bool `long:"help" description:"Display usage" global:"true"`
 		}{},
-		AutoHelp: true,
-		AnyError: true,
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Output:
 	// Usage: basic [options...]
 	//
@@ -395,7 +382,7 @@ func ExampleNew_usage_help() {
 func ExampleNew_version() {
 	os.Args = []string{"gocmd.test", "-vv"}
 
-	_, err := gocmd.New(gocmd.Options{
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
@@ -403,11 +390,8 @@ func ExampleNew_version() {
 			Version   bool `short:"v" long:"version" description:"Display version"`
 			VersionEx bool `long:"vv" description:"Display version (extended)"`
 		}{},
-		AutoVersion: true,
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Output:
 	// App name    : basic
 	// App version : 1.0.0
@@ -419,18 +403,15 @@ func ExampleNew_version() {
 func ExampleNew_version_v() {
 	os.Args = []string{"gocmd.test", "-v"}
 
-	_, err := gocmd.New(gocmd.Options{
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags: &struct {
 			Version bool `short:"v" long:"version" description:"Display version"`
 		}{},
-		AutoVersion: true,
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Output:
 	// 1.0.0
 
@@ -440,18 +421,15 @@ func ExampleNew_version_v() {
 func ExampleNew_version_version() {
 	os.Args = []string{"gocmd.test", "--version"}
 
-	_, err := gocmd.New(gocmd.Options{
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags: &struct {
 			Version bool `long:"version" description:"Display version"`
 		}{},
-		AutoVersion: true,
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	// Output:
 	// 1.0.0
 
@@ -511,7 +489,8 @@ func ExampleNew_command() {
 
 func ExampleCmd_PrintVersion() {
 	cmd, err := gocmd.New(gocmd.Options{
-		Version: "1.0.0",
+		Version:    "1.0.0",
+		ConfigType: gocmd.ConfigTypeAuto,
 	})
 	if err == nil {
 		cmd.PrintVersion(false)
