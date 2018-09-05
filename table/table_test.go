@@ -16,8 +16,8 @@ func TestNew(t *testing.T) {
 	Convey("should create a new table", t, func() {
 		t := table.New(table.Options{
 			Data: [][]string{
-				[]string{0: "foo", 1: "bar"},
-				[]string{0: "1", 1: "2"},
+				{0: "foo", 1: "bar"},
+				{0: "1", 1: "2"},
 			},
 		})
 
