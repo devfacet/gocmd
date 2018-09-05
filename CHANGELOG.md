@@ -1,9 +1,13 @@
 # Changelog
 
-# UNRELEASED
+## v3.1.0 (2018-09-04)
 
 - Fix flag settings scope
 - Fix command flag noempty tag
+- Implement flag handlers
+- Add Cmd.Options.Logger
+- Add Cmd.Options.ExitOnError
+- Add Cmd.Options.ConfigType
 
 ## v3.0.2 (2018-04-01)
 
