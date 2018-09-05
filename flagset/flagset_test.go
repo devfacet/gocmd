@@ -156,7 +156,7 @@ func TestNew(t *testing.T) {
 		So(flagErrors, ShouldNotBeNil)
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'DEFAULT' as int"))
 		So(flagErrors, ShouldContain, errors.New("argument -r is required"))
-		So(flagErrors, ShouldContain, errors.New("argument -n needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -n needs a value"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as bool"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as float64"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foo' as int"))
@@ -577,7 +577,7 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
 	})
 
 	Convey("should return correct flag errors (nonempty)", t, func() {
@@ -642,8 +642,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
 
 		flags07 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"true"`
@@ -655,8 +655,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
 
 		flags08 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"true"`
@@ -668,8 +668,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
 
 		flags09 := struct {
 			Foo string   `short:"f" long:"foo" required:"true"`
@@ -681,8 +681,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
 
 		flags10 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"true" required:"true"`
@@ -693,8 +693,8 @@ func TestNew(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a nonempty value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a nonempty value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
 
 		flags11 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"false" required:"true"`
@@ -737,7 +737,7 @@ func TestNew(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
-		So(flagErrors, ShouldBeNil)
+		So(flagErrors, ShouldContain, errors.New("command foo needs an argument"))
 
 		flags15 := struct {
 			Foo struct {
@@ -745,6 +745,67 @@ func TestNew(t *testing.T) {
 		}{}
 		args = []string{"./app", "foo"}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags15, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldContain, errors.New("command foo needs an argument"))
+
+		flags16 := struct {
+			Foo struct {
+			} `command:"foo" required:"true" nonempty:"false"`
+		}{}
+		args = []string{"./app", "foo"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags16, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags17 := struct {
+			Foo struct {
+			} `command:"foo" nonempty:"true"`
+		}{}
+		args = []string{"./app", "foo"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags17, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldContain, errors.New("command foo needs an argument"))
+
+		flags18 := struct {
+			Global int `short:"g" global:"true"`
+			Foo    struct {
+			} `command:"foo" nonempty:"true"`
+		}{}
+		args = []string{"./app", "foo", "-g", "1"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags18, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldContain, errors.New("command foo needs an argument"))
+
+		flags19 := struct {
+			Global int `short:"g" global:"true"`
+			Foo    struct {
+				Bar int `short:"b" long:"bar"`
+			} `command:"foo" nonempty:"true"`
+		}{}
+		args = []string{"./app", "foo", "-g", "1", "-b", "2"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags19, Args: args})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		flagErrors = flagSet.Errors()
+		So(flagErrors, ShouldBeNil)
+
+		flags20 := struct {
+			Foo struct {
+				Bar struct {
+					Baz int `short:"b"`
+				} `command:"bar"`
+			} `command:"foo" nonempty:"true"`
+		}{}
+		args = []string{"./app", "foo", "bar", "-b", "2"}
+		flagSet, err = flagset.New(flagset.Options{Flags: &flags20, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()

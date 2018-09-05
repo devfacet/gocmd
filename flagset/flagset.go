@@ -175,13 +175,18 @@ func New(o Options) (*FlagSet, error) {
 
 	// Iterate over the flags and check the required and nonempty arguments
 	for _, flag := range flagSet.flags {
+		// If it's not required and not a nonempty flag then
 		if !flag.required && !flag.nonempty {
 			continue // skip
 		}
 
 		if flag.kind == "command" {
-			if flag.required && flag.args == nil {
+			if flag.required && flag.args == nil { // command is not present
 				flag.err = fmt.Errorf("command %s is required", flag.command)
+			} else if flag.nonempty && len(flag.args) == 1 { // command is present
+				if len(flagSet.argsByCommandID(flag.commandID)) == 0 { // command itself has no any argument
+					flag.err = fmt.Errorf("command %s needs an argument", flag.command)
+				}
 			}
 			continue
 		} else if flag.kind == "arg" {
@@ -208,7 +213,7 @@ func New(o Options) (*FlagSet, error) {
 					}
 				}
 				if found {
-					flag.err = fmt.Errorf("argument %s needs a nonempty value", flag.FormattedArg())
+					flag.err = fmt.Errorf("argument %s needs a value", flag.FormattedArg())
 					continue
 				}
 			}
@@ -293,17 +298,19 @@ func (flagSet *FlagSet) parseSettings() {
 	for _, setting := range flagSet.settings {
 		// Iterate over the arguments
 		for k, arg := range flagSet.args {
+			// Skip the first argument
 			if k == 0 {
 				continue
 			}
-			// If it's a top level settings then
+			// If it's a top level setting then
 			if setting.parentID == -1 {
 				arg.settingsID = setting.id
 				continue
 			}
-			// Otherwise check whether the setting is prior to argument or not
-			if c := flagSet.commandByID(arg.commandID); c != nil && c.flagID >= setting.parentID {
+			// Otherwise check whether the argument is a command and the setting is belong to it
+			if c := flagSet.commandByID(arg.commandID); c != nil && c.flagID == setting.parentID {
 				arg.settingsID = setting.id
+				continue
 			}
 		}
 	}
@@ -335,6 +342,34 @@ func (flagSet *FlagSet) commandByID(id int) *Command {
 		}
 	}
 	return nil
+}
+
+// argsByCommandID returns arguments by the given command id
+func (flagSet *FlagSet) argsByCommandID(id int) []*Arg {
+	if id < 0 {
+		return nil
+	}
+
+	// Iterate over the arguments and prepare result
+	var result []*Arg
+	found := false
+	for _, v := range flagSet.args {
+		// Check whether the argument is the given command
+		if v.kind == "command" && v.commandID == id {
+			found = true
+			continue // skip
+		}
+		// If it's found then
+		if found {
+			// If the argument is global then
+			if f := flagSet.flagByID(v.flagID); f != nil && f.global {
+				continue // skip
+			}
+			// Otherwise add it into result
+			result = append(result, v)
+		}
+	}
+	return result
 }
 
 // flagByID returns a flag by the given id or returns nil if it doesn't exist

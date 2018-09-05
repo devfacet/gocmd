@@ -1,5 +1,10 @@
 # Changelog
 
+# UNRELEASED
+
+- Fix flag settings scope
+- Fix command flag noempty tag
+
 ## v3.0.2 (2018-04-01)
 
 - Fix slice flag value issue

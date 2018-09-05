@@ -848,6 +848,15 @@ func TestFlagSet_commandByID(t *testing.T) {
 	})
 }
 
+func TestFlagSet_argsByCommandID(t *testing.T) {
+	Convey("should return nil when the command id is not valid", t, func() {
+		flagSet, err := New(Options{Flags: &struct{}{}})
+		So(err, ShouldBeNil)
+		So(flagSet, ShouldNotBeNil)
+		So(flagSet.argsByCommandID(-1), ShouldBeNil)
+	})
+}
+
 func TestFlagSet_flagByID(t *testing.T) {
 	Convey("should return nil when the flag id is not valid", t, func() {
 		flagSet, err := New(Options{Flags: &struct{}{}})
