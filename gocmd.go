@@ -7,14 +7,20 @@
 package gocmd
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 
-	"github.com/devfacet/gocmd/table"
-
 	"github.com/devfacet/gocmd/flagset"
+	"github.com/devfacet/gocmd/table"
+)
+
+var (
+	flagHandlers []*FlagHandler
 )
 
 // Options represents the options that can be set when creating a new command
@@ -27,12 +33,18 @@ type Options struct {
 	Description string
 	// Flags hold user defined command line arguments and commands
 	Flags interface{}
-	// AutoHelp prints the usage content
-	AutoHelp bool
-	// AutoVersion prints the version content
-	AutoVersion bool
-	// AnyError checks all the errors and returns the first one
+	// Logger represents the logger that is being used for printing errors
+	Logger Logger
+	// ConfigType is the configuration type
+	ConfigType ConfigType
+	// AnyError checks all the errors and returns the first one if any
 	AnyError bool
+	// AutoHelp prints the usage content when the help flags are detected
+	AutoHelp bool
+	// AutoVersion prints the version content when the version flags are detected
+	AutoVersion bool
+	// ExitOnError prints the error and exits the program when there is an error
+	ExitOnError bool
 }
 
 // New returns a command by the given options
@@ -44,74 +56,127 @@ func New(o Options) (*Cmd, error) {
 		description: o.Description,
 		flags:       o.Flags,
 		flagSet:     &flagset.FlagSet{},
+		logger:      o.Logger,
 	}
 
-	if o.Flags != nil {
-		var err error
-		cmd.flagSet, err = flagset.New(flagset.Options{Flags: o.Flags})
-		if err != nil {
-			return nil, err
-		} else if o.AnyError && len(cmd.flagSet.Errors()) > 0 {
-			return nil, cmd.flagSet.Errors()[0]
-		}
+	// Check the logger
+	if cmd.logger == nil {
+		cmd.logger = log.New(os.Stdout, "", 0)
+	}
 
-		// Auto version
-		if o.AutoVersion {
-			ver := false
-			if f := cmd.flagSet.FlagByArg("v", ""); f != nil {
+	// Check the config type
+	switch o.ConfigType {
+	case ConfigTypeAuto:
+		o.AnyError = true
+		o.AutoHelp = true
+		o.AutoVersion = true
+		o.ExitOnError = true
+	}
+
+	// If there is no any flag then
+	if o.Flags == nil {
+		return &cmd, nil
+	}
+
+	// Parse flags
+	var err error
+	cmd.flagSet, err = flagset.New(flagset.Options{Flags: o.Flags})
+	if err != nil {
+		if o.ExitOnError {
+			cmd.logger.Printf("%s\n", err)
+			cmd.exit(1)
+		}
+		return nil, err
+	} else if (o.AnyError || o.ExitOnError) && len(cmd.flagSet.Errors()) > 0 {
+		if o.ExitOnError {
+			cmd.logger.Printf("%s\n", cmd.flagSet.Errors()[0])
+			cmd.exit(1)
+		}
+		return nil, cmd.flagSet.Errors()[0]
+	}
+
+	// Auto version
+	if o.AutoVersion {
+		ver := false
+		if f := cmd.flagSet.FlagByArg("v", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				ver = true
+			}
+		}
+		if !ver {
+			if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
 				if v, ok := f.Value().(bool); ok && v {
 					ver = true
 				}
 			}
-			if !ver {
-				if f := cmd.flagSet.FlagByArg("version", ""); f != nil {
-					if v, ok := f.Value().(bool); ok && v {
-						ver = true
-					}
-				}
-			}
-			verEx := false
-			if f := cmd.flagSet.FlagByArg("vv", ""); f != nil {
-				if v, ok := f.Value().(bool); ok && v {
-					verEx = true
-				}
-			}
-
-			if ver || verEx {
-				cmd.PrintVersion(verEx)
-				cmd.exit()
+		}
+		verEx := false
+		if f := cmd.flagSet.FlagByArg("vv", ""); f != nil {
+			if v, ok := f.Value().(bool); ok && v {
+				verEx = true
 			}
 		}
 
-		// Auto help
-		if o.AutoHelp {
-			help := false
-			if len(os.Args) == 1 {
-				help = true
-			} else {
-				if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
+		if ver || verEx {
+			cmd.PrintVersion(verEx)
+			cmd.exit(0)
+		}
+	}
+
+	// Auto help
+	if o.AutoHelp {
+		help := false
+		if len(os.Args) == 1 {
+			help = true
+		} else {
+			if f := cmd.flagSet.FlagByArg("h", ""); f != nil {
+				if v, ok := f.Value().(bool); ok && v {
+					help = true
+				}
+			}
+			if !help {
+				if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
 					if v, ok := f.Value().(bool); ok && v {
 						help = true
 					}
 				}
-				if !help {
-					if f := cmd.flagSet.FlagByArg("help", ""); f != nil {
-						if v, ok := f.Value().(bool); ok && v {
-							help = true
-						}
-					}
-				}
 			}
+		}
 
-			if help {
-				cmd.PrintUsage()
-				cmd.exit()
+		if help {
+			cmd.PrintUsage()
+			cmd.exit(0)
+		}
+	}
+
+	// Check handlers
+	sort.Sort(byFlagHandlerPriority(flagHandlers))
+	for _, v := range flagHandlers {
+		args := cmd.FlagArgs(v.name)
+		if cmd.FlagArgs(v.name) != nil {
+			err := v.handler(&cmd, args)
+			if err != nil {
+				if v.exitOnError {
+					cmd.logger.Printf("%s\n", err)
+					cmd.exit(1)
+				}
+				return nil, err
 			}
 		}
 	}
 
 	return &cmd, nil
 }
+
+// ConfigType represents a configuration type
+type ConfigType int
+
+const (
+	// ConfigTypeAuto is a configuration type that enables automatic functionalities
+	// such as usage and version printing, exit on error, etc.
+	// It sets AnyError, AutoHelp, AutoVersion, ExitOnError = true
+	ConfigTypeAuto = iota + 1
+)
 
 // Cmd represents a command
 type Cmd struct {
@@ -120,6 +185,7 @@ type Cmd struct {
 	description string
 	flags       interface{}
 	flagSet     *flagset.FlagSet
+	logger      Logger
 }
 
 // Name returns the name of the command
@@ -138,6 +204,7 @@ func (cmd *Cmd) Description() string {
 }
 
 // LookupFlag returns the flag arguments by the given flag name
+// Nested flags are separated by dot (i.e. Foo.Bar)
 func (cmd *Cmd) LookupFlag(name string) ([]string, bool) {
 	flag := cmd.flagSet.FlagByName(name)
 	if flag != nil {
@@ -147,6 +214,7 @@ func (cmd *Cmd) LookupFlag(name string) ([]string, bool) {
 }
 
 // FlagValue returns the flag value by the given flag name
+// Nested flags are separated by dot (i.e. Foo.Bar)
 func (cmd *Cmd) FlagValue(name string) interface{} {
 	flag := cmd.flagSet.FlagByName(name)
 	if flag != nil {
@@ -156,6 +224,7 @@ func (cmd *Cmd) FlagValue(name string) interface{} {
 }
 
 // FlagArgs returns the flag arguments by the given flag name
+// Nested flags are separated by dot (i.e. Foo.Bar)
 func (cmd *Cmd) FlagArgs(name string) []string {
 	if args, ok := cmd.LookupFlag(name); ok && args != nil {
 		return args
@@ -353,8 +422,63 @@ func (cmd *Cmd) isTest() bool {
 	return false
 }
 
-func (cmd *Cmd) exit() {
+func (cmd *Cmd) exit(code int) {
 	if !cmd.isTest() {
-		os.Exit(0)
+		os.Exit(code)
 	}
+}
+
+// FlagHandler represents a flag handler
+type FlagHandler struct {
+	// name of the flag
+	// Nested flags are separated by dot (i.e. Foo.Bar)
+	name string
+	// priority of the flag handler
+	// When there are multiple handlers for the same flag, they are sorted in descending order prior to execution.
+	priority int
+	// handler is the function that is called when the flag is detected
+	handler func(cmd *Cmd, args []string) error
+	// exitOnError prints the error and exits the program when the handler returns an error
+	exitOnError bool
+}
+
+// SetPriority sets the value of the priority
+func (fh *FlagHandler) SetPriority(v int) {
+	fh.priority = v
+}
+
+// SetExitOnError sets the value of the exitOnError
+func (fh *FlagHandler) SetExitOnError(v bool) {
+	fh.exitOnError = v
+}
+
+// HandleFlag registers the flag handle for the given flag name
+func HandleFlag(name string, handler func(cmd *Cmd, args []string) error) (*FlagHandler, error) {
+	if name == "" {
+		return nil, errors.New("invalid flag name")
+	}
+
+	// Init vars
+	fh := FlagHandler{
+		name:        name,
+		priority:    0,
+		handler:     handler,
+		exitOnError: true,
+	}
+	flagHandlers = append(flagHandlers, &fh)
+
+	return &fh, nil
+}
+
+// byFlagHandlerPriority implements sort.Interface for []*FlagHandler
+type byFlagHandlerPriority []*FlagHandler
+
+func (p byFlagHandlerPriority) Len() int           { return len(p) }
+func (p byFlagHandlerPriority) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p byFlagHandlerPriority) Less(i, j int) bool { return p[i].priority < p[j].priority }
+
+// Logger is the interface that must be implemented by loggers
+type Logger interface {
+	Fatalf(format string, v ...interface{})
+	Printf(format string, v ...interface{})
 }

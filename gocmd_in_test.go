@@ -148,7 +148,7 @@ func TestCmd_exit(t *testing.T) {
 		cmd, err := New(Options{Name: "test"})
 		So(err, ShouldBeNil)
 		So(cmd, ShouldNotBeNil)
-		cmd.exit()
+		cmd.exit(0)
 		resetArgs()
 	})
 }

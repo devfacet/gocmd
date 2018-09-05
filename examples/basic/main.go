@@ -1,9 +1,7 @@
-// A basic app
 package main
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -26,37 +24,31 @@ func main() {
 				Base     float64 `short:"b" long:"base" required:"true" description:"Base"`
 				Exponent float64 `short:"e" long:"exponent" required:"true" description:"Exponent"`
 			} `command:"pow" description:"Calculate base exponential"`
-		} `command:"math" description:"Math functions"`
+		} `command:"math" description:"Math functions" nonempty:"true"`
 	}{}
 
-	cmd, err := gocmd.New(gocmd.Options{
+	// Echo command
+	gocmd.HandleFlag("Echo", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Printf("%s\n", strings.Join(cmd.FlagArgs("Echo")[1:], " "))
+		return nil
+	})
+
+	// Math commands
+	gocmd.HandleFlag("Math.Sqrt", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Println(math.Sqrt(flags.Math.Sqrt.Number))
+		return nil
+	})
+	gocmd.HandleFlag("Math.Pow", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Println(math.Pow(flags.Math.Pow.Base, flags.Math.Pow.Exponent))
+		return nil
+	})
+
+	// Init the app
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags:       &flags,
-		AutoHelp:    true,
-		AutoVersion: true,
-		AnyError:    true,
+		ConfigType:  gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Echo command
-	if cmd.FlagArgs("Echo") != nil {
-		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
-		return
-	}
-
-	// Math command
-	if cmd.FlagArgs("Math") != nil {
-		if cmd.FlagArgs("Math.Sqrt") != nil {
-			fmt.Println(math.Sqrt(flags.Math.Sqrt.Number))
-		} else if cmd.FlagArgs("Math.Pow") != nil {
-			fmt.Println(math.Pow(flags.Math.Pow.Base, flags.Math.Pow.Exponent))
-		} else {
-			log.Fatal("invalid math command")
-		}
-		return
-	}
 }

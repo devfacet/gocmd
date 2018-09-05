@@ -8,6 +8,7 @@ package gocmd_test
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -92,7 +93,34 @@ func TestNew(t *testing.T) {
 		So(err, ShouldBeError, errors.New("argument -f is required"))
 		So(cmd, ShouldBeNil)
 
-		resetArgs()
+		cmd, err = gocmd.New(gocmd.Options{
+			Name:        "test",
+			Version:     "1.0.0",
+			Description: "Test",
+			Flags: &struct {
+				Foo bool `short:"f"`
+				Bar bool `short:"f"`
+			}{},
+			Logger:      log.New(ioutil.Discard, "", 0),
+			ExitOnError: true,
+		})
+		So(err, ShouldNotBeNil)
+		So(err, ShouldBeError, errors.New("short argument f in Bar field is already defined in Foo field"))
+		So(cmd, ShouldBeNil)
+
+		cmd, err = gocmd.New(gocmd.Options{
+			Name:        "test",
+			Version:     "1.0.0",
+			Description: "Test",
+			Flags: &struct {
+				Foo bool `short:"f" required:"true"`
+			}{},
+			Logger:      log.New(ioutil.Discard, "", 0),
+			ExitOnError: true,
+		})
+		So(err, ShouldNotBeNil)
+		So(err, ShouldBeError, errors.New("argument -f is required"))
+		So(cmd, ShouldBeNil)
 	})
 }
 
@@ -209,6 +237,51 @@ func TestCmd_FlagErrors(t *testing.T) {
 		flagErrors := cmd.FlagErrors()
 		So(flagErrors, ShouldNotBeNil)
 		So(flagErrors, ShouldContain, errors.New("command foo can't be global"))
+	})
+}
+
+func TestHandleFlag(t *testing.T) {
+	Convey("should fail to add flag handler", t, func() {
+		fh, err := gocmd.HandleFlag("", func(cmd *gocmd.Cmd, args []string) error {
+			return nil
+		})
+		So(err, ShouldNotBeNil)
+		So(err, ShouldBeError, errors.New("invalid flag name"))
+		So(fh, ShouldBeNil)
+	})
+
+	Convey("should add flag handler", t, func() {
+		resetArgs()
+
+		os.Args = []string{"gocmd.test", "fh1", "fh2"}
+		fhCnt := 0
+		fh, _ := gocmd.HandleFlag("FH1", func(cmd *gocmd.Cmd, args []string) error {
+			fhCnt++
+			return errors.New("handler error")
+		})
+		fh.SetPriority(1)
+		fh.SetExitOnError(true)
+		gocmd.HandleFlag("FH2", func(cmd *gocmd.Cmd, args []string) error {
+			fhCnt++
+			return nil
+		})
+		fh.SetPriority(2)
+		cmd, err := gocmd.New(gocmd.Options{
+			Name:        "test",
+			Version:     "1.0.0",
+			Description: "Test",
+			Flags: &struct {
+				FH1 struct{} `command:"fh1"`
+				FH2 struct{} `command:"fh2"`
+			}{},
+			Logger: log.New(ioutil.Discard, "", 0),
+		})
+		So(err, ShouldNotBeNil)
+		So(err, ShouldBeError, errors.New("handler error"))
+		So(cmd, ShouldBeNil)
+		So(fhCnt, ShouldEqual, 2)
+
+		resetArgs()
 	})
 }
 
@@ -403,39 +476,33 @@ func ExampleNew_command() {
 				Base     float64 `short:"b" long:"base" required:"true" description:"Base"`
 				Exponent float64 `short:"e" long:"exponent" required:"true" description:"Exponent"`
 			} `command:"pow" description:"Calculate base exponential"`
-		} `command:"math" description:"Math functions"`
+		} `command:"math" description:"Math functions" nonempty:"true"`
 	}{}
 
-	cmd, err := gocmd.New(gocmd.Options{
+	// Echo command
+	gocmd.HandleFlag("Echo", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Printf("%s\n", strings.Join(cmd.FlagArgs("Echo")[1:], " "))
+		return nil
+	})
+
+	// Math commands
+	gocmd.HandleFlag("Math.Sqrt", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Println(math.Sqrt(flags.Math.Sqrt.Number))
+		return nil
+	})
+	gocmd.HandleFlag("Math.Pow", func(cmd *gocmd.Cmd, args []string) error {
+		fmt.Println(math.Pow(flags.Math.Pow.Base, flags.Math.Pow.Exponent))
+		return nil
+	})
+
+	// Init the app
+	gocmd.New(gocmd.Options{
 		Name:        "basic",
 		Version:     "1.0.0",
 		Description: "A basic app",
 		Flags:       &flags,
-		AutoHelp:    true,
-		AutoVersion: true,
-		AnyError:    true,
+		ConfigType:  gocmd.ConfigTypeAuto,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Echo command
-	if cmd.FlagArgs("Echo") != nil {
-		fmt.Printf("%s\n", strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%v", cmd.FlagArgs("Echo")[1:]), "["), "]"))
-		return
-	}
-
-	// Math command
-	if cmd.FlagArgs("Math") != nil {
-		if cmd.FlagArgs("Math.Sqrt") != nil {
-			fmt.Println(math.Sqrt(flags.Math.Sqrt.Number))
-		} else if cmd.FlagArgs("Math.Pow") != nil {
-			fmt.Println(math.Pow(flags.Math.Pow.Base, flags.Math.Pow.Exponent))
-		} else {
-			log.Fatal("invalid math command")
-		}
-		return
-	}
 	// Output:
 	// 3
 
