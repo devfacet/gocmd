@@ -2,7 +2,9 @@ sudo: false
 
 language: go
 go:
-  - 1.9
+  - "1.9"
+  - "1.10"
+  - "1.11"
 
 install:
   - go get github.com/modocache/gover
