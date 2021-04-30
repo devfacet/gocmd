@@ -249,12 +249,12 @@ func (cmd *Cmd) PrintVersion(extra bool) {
 	}
 
 	// Set version
-	if extra == true {
+	if extra {
 		version += fmt.Sprintf("App name    : %s\n", cmd.Name())
 		version += fmt.Sprintf("App version : %s\n", strings.TrimPrefix(cmd.Version(), "v"))
 		version += fmt.Sprintf("Go version  : %s", goVersion)
 	} else {
-		version = fmt.Sprintf("%s", strings.TrimPrefix(cmd.Version(), "v"))
+		version = strings.TrimPrefix(cmd.Version(), "v")
 	}
 
 	fmt.Println(version)
@@ -288,7 +288,10 @@ func (cmd *Cmd) usageItems(kind string, parentID int, level int) []*usageItem {
 			continue
 		}
 
-		level = len(flag.FieldIndex())
+		fil := len(flag.FieldIndex())
+		if fil != 0 {
+			level = len(flag.FieldIndex())
+		}
 
 		if flag.Kind() == "command" {
 			command := flag.Command()
