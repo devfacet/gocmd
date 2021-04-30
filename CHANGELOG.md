@@ -3,6 +3,7 @@
 ## v3.1.1 (2021-04-29)
 
 - Add go.mod
+- Fix level
 - Maintenance
 
 ## v3.1.0 (2018-09-04)
