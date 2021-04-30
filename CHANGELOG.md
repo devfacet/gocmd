@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.1 (2021-04-29)
+
+- Add go.mod
+- Maintenance
+
 ## v3.1.0 (2018-09-04)
 
 - Fix flag settings scope
