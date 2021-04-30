@@ -8,7 +8,7 @@ package table_test
 import (
 	"testing"
 
-	"github.com/devfacet/gocmd/table"
+	"github.com/devfacet/gocmd/v3/table"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

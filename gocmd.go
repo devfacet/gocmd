@@ -15,8 +15,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/devfacet/gocmd/flagset"
-	"github.com/devfacet/gocmd/table"
+	"github.com/devfacet/gocmd/v3/flagset"
+	"github.com/devfacet/gocmd/v3/table"
 )
 
 var (

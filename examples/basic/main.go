@@ -5,7 +5,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/devfacet/gocmd"
+	gocmd "github.com/devfacet/gocmd/v3"
 )
 
 func main() {

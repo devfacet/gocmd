@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/devfacet/gocmd/template"
+	"github.com/devfacet/gocmd/v3/template"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

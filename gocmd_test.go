@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devfacet/gocmd"
+	"github.com/devfacet/gocmd/v3"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

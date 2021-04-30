@@ -21,7 +21,7 @@ A Go library for building command line applications.
 ## Installation
 
 ```sh
-go get github.com/devfacet/gocmd
+go get github.com/devfacet/gocmd/v3
 ```
 
 ## Usage
@@ -99,12 +99,6 @@ Commands:
     pow              	Calculate base exponential
       -b, --base     	Base
       -e, --exponent 	Exponent
-```
-
-## Build
-
-```sh
-go build .
 ```
 
 ## Test
