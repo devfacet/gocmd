@@ -133,7 +133,7 @@ Licensed under The MIT License (MIT)
 For the full copyright and license information, please view the LICENSE.txt file.
 
 
-[doc-url]: https://pkg.go.dev/github.com/devfacet/gocmd
+[doc-url]: https://pkg.go.dev/github.com/devfacet/gocmd/v3
 [doc-image]: https://godoc.org/github.com/devfacet/gocmd?status.svg
 
 [release-url]: https://github.com/devfacet/gocmd/releases/latest
