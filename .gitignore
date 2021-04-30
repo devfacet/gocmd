@@ -1,17 +1,20 @@
 .DS_Store
-Thumbs.db
 .vscode
+.vs
+Thumbs.db
 
-*.log
 *.exe
-*.prof
+*.log
 *.out
+*.prof
+*.so
 
-tmp/
+
 logs/
+node_modules/
 reports/
 releases/
+tmp/
 vendor/
-node_modules/
 
 examples/basic/basic
