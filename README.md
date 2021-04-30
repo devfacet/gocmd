@@ -1,6 +1,6 @@
 # gocmd
 
-[![Release][release-image]][release-url] [![Build Status][build-image]][build-url] [![Coverage][coverage-image]][coverage-url] [![Report][report-image]][report-url] [![GoDoc][doc-image]][doc-url]
+[![Release][release-image]][release-url] [![GoDoc][doc-image]][doc-url] [![Report][report-image]][report-url]
 
 A Go library for building command line applications.
 
@@ -20,7 +20,7 @@ A Go library for building command line applications.
 
 ## Installation
 
-```bash
+```sh
 go get github.com/devfacet/gocmd
 ```
 
@@ -76,12 +76,12 @@ func main() {
 	})
 }
 ```
-```bash
+```sh
 cd examples/basic/
 go build .
+./basic
 ```
 ```
-$ ./basic
 Usage: basic [options...] COMMAND [options...]
 
 A basic app
@@ -99,39 +99,39 @@ Commands:
     pow              	Calculate base exponential
       -b, --base     	Base
       -e, --exponent 	Exponent
-
 ```
 
 ## Build
 
-```bash
+```sh
 go build .
 ```
 
 ## Test
 
-```bash
+```sh
+# Test everything
 ./test.sh
+
+# For TDD/BDD development:
+# Run ./test.sh first to get goconvey binary.
+goconvey
+# It will open a new browser window. Make sure:
+#   1. There is no errors on the terminal window.
+#   2. There is no other open GoConvey page.
 ```
 
 ## Release
 
-```bash
+```sh
 git add CHANGELOG.md # update CHANGELOG.md
 ./release.sh v1.0.0  # replace "v1.0.0" with new version
-
 git ls-remote --tags # check the new tag
 ```
 
 ## Contributing
 
-- Code contributions must be through pull requests
-- Run tests, linting and formatting before a pull request
-- Pull requests can not be merged without being reviewed
-- Use "Issues" for bug reports, feature requests and discussions
-- Do not refactor existing code without a discussion
-- Do not add a new third party dependency without a discussion
-- Use semantic versioning and git tags for versioning
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 
@@ -139,17 +139,11 @@ Licensed under The MIT License (MIT)
 For the full copyright and license information, please view the LICENSE.txt file.
 
 
+[doc-url]: https://pkg.go.dev/github.com/devfacet/gocmd
+[doc-image]: https://godoc.org/github.com/devfacet/gocmd?status.svg
+
 [release-url]: https://github.com/devfacet/gocmd/releases/latest
-[release-image]: https://img.shields.io/github/release/devfacet/gocmd.svg
-
-[build-url]: https://travis-ci.org/devfacet/gocmd
-[build-image]: https://travis-ci.org/devfacet/gocmd.svg?branch=master
-
-[coverage-url]: https://coveralls.io/github/devfacet/gocmd?branch=master
-[coverage-image]: https://coveralls.io/repos/devfacet/gocmd/badge.svg?branch=master&service=github
+[release-image]: https://img.shields.io/github/release/devfacet/gocmd.svg?style=flat-square
 
 [report-url]: https://goreportcard.com/report/github.com/devfacet/gocmd
-[report-image]: https://goreportcard.com/badge/github.com/devfacet/gocmd
-
-[doc-url]: https://godoc.org/github.com/devfacet/gocmd
-[doc-image]: https://godoc.org/github.com/devfacet/gocmd?status.svg
+[report-image]: https://goreportcard.com/badge/github.com/devfacet/gocmd?style=flat-square
