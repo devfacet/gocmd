@@ -4,6 +4,8 @@
 
 A Go library for building command line applications.
 
+> Note that the terminal commands are tested on MacOS and should work on POSIX compatible systems.
+
 ## Features
 
 - Advanced command line arguments handling
@@ -20,7 +22,7 @@ A Go library for building command line applications.
 
 ## Installation
 
-```sh
+```shell
 go get github.com/devfacet/gocmd/v3
 ```
 
@@ -28,7 +30,7 @@ go get github.com/devfacet/gocmd/v3
 
 ### A basic app
 
-See [basic](examples/basic/main.go) for full code.
+For the full code [click here](examples/basic/main.go).
 
 ```go
 func main() {
@@ -69,19 +71,21 @@ func main() {
 	// Init the app
 	gocmd.New(gocmd.Options{
 		Name:        "basic",
-		Version:     "1.0.0",
 		Description: "A basic app",
+		Version:     fmt.Sprintf("%s (%s)", version, gitCommit),
 		Flags:       &flags,
 		ConfigType:  gocmd.ConfigTypeAuto,
 	})
 }
 ```
-```sh
-cd examples/basic/
-go build .
-./basic
+```shell
+# Build the example app:
+make build
+
+# Run it:
+gocmdbasic
 ```
-```
+```shell
 Usage: basic [options...] COMMAND [options...]
 
 A basic app
@@ -104,23 +108,21 @@ Commands:
 ## Test
 
 ```sh
-# Test everything
-./test.sh
+# Test everything:
+make test
 
-# For TDD/BDD development:
-# Run ./test.sh first to get goconvey binary.
-goconvey
+# For BDD development:
 # It will open a new browser window. Make sure:
 #   1. There is no errors on the terminal window.
 #   2. There is no other open GoConvey page.
+make test-ui
 ```
 
 ## Release
 
 ```sh
-git add CHANGELOG.md # update CHANGELOG.md
-./release.sh v1.0.0  # replace "v1.0.0" with new version
-git ls-remote --tags # check the new tag
+git add CHANGELOG.md # update CHANGELOG.md first
+make release v1.0.0  # replace "v1.0.0" with new version
 ```
 
 ## Contributing
