@@ -600,7 +600,7 @@ func (flagSet *FlagSet) parseCommands() {
 					found = true
 				}
 
-				if found == true {
+				if found {
 					cmd.indexFrom = argIndex
 					cmd.argID = argIndex
 					cmd.updatedBy = append(cmd.updatedBy, "found in the arguments")
@@ -837,6 +837,11 @@ func (flagSet *FlagSet) parseArgs() {
 					// Iterate over the parent flag's arguments
 					for _, pArg := range parentFlag.args {
 						if pArg.name != "" && (flag.short == pArg.name || flag.long == pArg.name) {
+							if flag.kind == "arg" && pArg.kind == "command" {
+								// Do not add a command into an argument.
+								// This might happen when a command and it's argument has same name.
+								continue
+							}
 							flag.updatedBy = append(flag.updatedBy, "matched argument")
 							flag.commandID = pArg.commandID
 							pArg.flagID = flag.id
