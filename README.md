@@ -104,6 +104,14 @@ Commands:
       -b, --base     	Base
       -e, --exponent 	Exponent
 ```
+```shell
+# Try the following commands:
+gocmdbasic echo hello world
+gocmdbasic math sqrt -n 9
+gocmdbasic math pow -b 2 --exponent 2
+gocmdbasic -v
+gocmdbasic --vv
+```
 
 ## Test
 
