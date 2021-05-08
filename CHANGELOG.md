@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.2 (2021-05-08)
+
+- Replace shell scripts with Makefile
+- Fix an issue where a command and it's argument have same name.
+
 ## v3.1.1 (2021-04-29)
 
 - Add go.mod
