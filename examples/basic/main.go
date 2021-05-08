@@ -5,7 +5,12 @@ import (
 	"math"
 	"strings"
 
-	gocmd "github.com/devfacet/gocmd/v3"
+	"github.com/devfacet/gocmd/v3"
+)
+
+var (
+	version   = "unknown"
+	gitCommit = "unknown"
 )
 
 func main() {
@@ -46,8 +51,8 @@ func main() {
 	// Init the app
 	gocmd.New(gocmd.Options{
 		Name:        "basic",
-		Version:     "1.0.0",
 		Description: "A basic app",
+		Version:     fmt.Sprintf("%s (%s)", version, gitCommit),
 		Flags:       &flags,
 		ConfigType:  gocmd.ConfigTypeAuto,
 	})
