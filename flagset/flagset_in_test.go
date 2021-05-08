@@ -45,7 +45,7 @@ func TestFlagSet_1(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors := flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -r is required"))
+		So(flagErrors, ShouldContain, errors.New("argument -r (--required) is required"))
 
 		flagTests := []struct {
 			id           int
@@ -118,7 +118,7 @@ func TestFlagSet_1(t *testing.T) {
 				parentID:     -1,
 				commandID:    -1,
 				args:         nil,
-				err:          errors.New("argument -r is required"),
+				err:          errors.New("argument -r (--required) is required"),
 				updatedBy:    nil,
 				value:        false,
 			},

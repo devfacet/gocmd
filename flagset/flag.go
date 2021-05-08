@@ -5,7 +5,9 @@
 
 package flagset
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var (
 	supportedFlagTypes = []string{
@@ -95,9 +97,14 @@ func (f *Flag) Long() string {
 func (f *Flag) FormattedArg() string {
 	arg := ""
 	if f.short != "" {
-		arg = fmt.Sprintf("%s%s", "-", f.short)
-	} else if f.long != "" {
-		arg = fmt.Sprintf("%s%s", "--", f.long)
+		arg = fmt.Sprintf("-%s", f.short)
+	}
+	if f.long != "" {
+		if arg != "" {
+			arg = fmt.Sprintf("%s (--%s)", arg, f.long)
+		} else {
+			arg = fmt.Sprintf("%s%s", "--", f.long)
+		}
 	}
 	return arg
 }

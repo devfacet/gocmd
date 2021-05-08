@@ -436,8 +436,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors := flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f is required"))
-		So(flagErrors, ShouldContain, errors.New("argument -s is required"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) is required"))
+		So(flagErrors, ShouldContain, errors.New("argument -s (--string) is required"))
 		So(flags01.Foo, ShouldEqual, false)
 		So(flags01.String, ShouldEqual, "")
 
@@ -497,7 +497,7 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f is required for bar command"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) is required for bar command"))
 		So(flags05.CommandFoo.Foo, ShouldEqual, false)
 		So(flags05.CommandFoo.String, ShouldEqual, "")
 
@@ -642,8 +642,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b (--bar) needs a value"))
 
 		flags07 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"true"`
@@ -655,8 +655,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b (--bar) needs a value"))
 
 		flags08 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"true"`
@@ -668,8 +668,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b (--bar) needs a value"))
 
 		flags09 := struct {
 			Foo string   `short:"f" long:"foo" required:"true"`
@@ -681,8 +681,8 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors = flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b (--bar) needs a value"))
 
 		flags10 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"true" required:"true"`
@@ -693,8 +693,8 @@ func TestNew(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -f needs a value"))
-		So(flagErrors, ShouldContain, errors.New("argument -b needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -f (--foo) needs a value"))
+		So(flagErrors, ShouldContain, errors.New("argument -b (--bar) needs a value"))
 
 		flags11 := struct {
 			Foo string   `short:"f" long:"foo" nonempty:"false" required:"true"`
@@ -881,7 +881,7 @@ func TestNew(t *testing.T) {
 		flags06 := struct {
 			Global     bool `short:"g" long:"global" global:"true"`
 			CommandFoo struct {
-				Bar bool `short:"b" long:"hello" global:"true"`
+				Bar bool `short:"b" long:"bar" global:"true"`
 				Baz bool `long:"baz" global:"true"`
 			} `command:"foo"`
 			CommandQux struct {
@@ -893,7 +893,7 @@ func TestNew(t *testing.T) {
 		So(flagSet, ShouldNotBeNil)
 		flagErrors := flagSet.Errors()
 		So(flagErrors, ShouldNotBeNil)
-		So(flagErrors, ShouldContain, errors.New("argument -b can't be global"))
+		So(flagErrors, ShouldContain, errors.New("argument -b (--bar) can't be global"))
 		So(flagErrors, ShouldContain, errors.New("argument --baz can't be global"))
 		So(flagErrors, ShouldContain, errors.New("command qux can't be global"))
 		So(flags06.Global, ShouldEqual, true)
