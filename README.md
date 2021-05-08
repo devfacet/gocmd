@@ -130,7 +130,7 @@ make test-ui
 
 ```sh
 git add CHANGELOG.md # update CHANGELOG.md first
-make release v1.0.0  # replace "v1.0.0" with new version
+make release GIT_TAG=v1.0.0  # replace "v1.0.0" with new version
 ```
 
 ## Contributing
