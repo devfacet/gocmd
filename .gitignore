@@ -9,7 +9,6 @@ Thumbs.db
 *.prof
 *.so
 
-
 logs/
 node_modules/
 reports/
