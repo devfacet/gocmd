@@ -1,10 +1,8 @@
 # gocmd
 
-[![Release][release-image]][release-url] [![GoDoc][doc-image]][doc-url] [![Report][report-image]][report-url]
+[![Godoc][doc-image]][doc-url] [![Release][release-image]][release-url] [![Build][build-image]][build-url] [![Report][report-image]][report-url]
 
 A Go library for building command line applications.
-
-> Note that the terminal commands are tested on MacOS and should work on POSIX compatible systems.
 
 ## Features
 
@@ -115,7 +113,7 @@ gocmdbasic --vv
 
 ## Test
 
-```sh
+```shell
 # Test everything:
 make test
 
@@ -124,13 +122,17 @@ make test
 #   1. There is no errors on the terminal window.
 #   2. There is no other open GoConvey page.
 make test-ui
+
+# Benchmarks
+make test-benchmarks
 ```
 
 ## Release
 
-```sh
-git add CHANGELOG.md # update CHANGELOG.md first
-make release GIT_TAG=v1.0.0  # replace "v1.0.0" with new version
+```shell
+# Update and commit CHANGELOG.md first (i.e. git add CHANGELOG.md && git commit -m "v1.0.0").
+# Set GIT_TAG using semver (i.e. GIT_TAG=v1.0.0)
+make release GIT_TAG=
 ```
 
 ## Contributing
@@ -142,12 +144,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 Licensed under The MIT License (MIT)  
 For the full copyright and license information, please view the LICENSE.txt file.
 
-
-[doc-url]: https://pkg.go.dev/github.com/devfacet/gocmd/v3
-[doc-image]: https://godoc.org/github.com/devfacet/gocmd?status.svg
+[doc-url]: https://pkg.go.dev/github.com/devfacet/gocmd
+[doc-image]: https://pkg.go.dev/badge/github.com/devfacet/gocmd
 
 [release-url]: https://github.com/devfacet/gocmd/releases/latest
 [release-image]: https://img.shields.io/github/release/devfacet/gocmd.svg?style=flat-square
+
+[build-url]: https://github.com/devfacet/gocmd/actions/workflows/test.yaml
+[build-image]: https://github.com/devfacet/gocmd/workflows/Test/badge.svg
 
 [report-url]: https://goreportcard.com/report/github.com/devfacet/gocmd
 [report-image]: https://goreportcard.com/badge/github.com/devfacet/gocmd?style=flat-square
