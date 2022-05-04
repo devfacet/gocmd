@@ -8,101 +8,108 @@ help: Makefile
 	@echo
 	@echo " Commands:"
 	@echo
-	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
+	@sed -n 's/^##//p' $< | sed -e 's/^/ /' | sort
 	@echo
 
-## test: Run gofmt, golint, staticcheck, go vet and go test.
+## test            Run gofmt, golint, staticcheck, go vet and go test.
 test:
-	$(eval FMT=$(shell gofmt -l . | grep -v -E '^vendor/'))
-	@if [ ! -z "$(FMT)" ]; then \
+	$(eval FMT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs gofmt -l | wc -l | tr -d ' '))
+	@if [ "$(FMT)" != "0" ]; then \
 		echo "some files are not formatted, run 'make fmt'"; \
+		exit 1; \
 	fi
 
-	$(eval GOLINT_PATH=$(shell which golint))
-	@if [ -z $(GOLINT_PATH) ]; then \
-		GO111MODULE=off go get golang.org/x/lint/golint; \
-	fi
-	$(eval LINT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | sort | xargs golint | wc -l | tr -d ' '))
+	$(eval LINT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs golint | wc -l | tr -d ' '))
 	@if [ "$(LINT)" != "0" ]; then \
 		echo "some files have linting errors, run 'make lint'"; \
+		exit 1; \
 	fi
 
-	$(eval STATICCHECK_PATH=$(shell which staticcheck))
-	@if [ -z $(STATICCHECK_PATH) ]; then \
-		GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck; \
-	fi
-	$(eval STATICCHECK=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | sort | xargs staticcheck | wc -l | tr -d ' '))
+	$(eval STATICCHECK=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs staticcheck | wc -l | tr -d ' '))
 	@if [ "$(STATICCHECK)" != "0" ]; then \
 		echo "some files have staticcheck errors, run 'make staticcheck'"; \
+		exit 1; \
 	fi
 
-	$(eval GOVET=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | uniq | xargs go vet 2>&1 | wc -l | tr -d ' '))
+	$(eval GOVET=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | sort | uniq | xargs go vet 2>&1 | wc -l | tr -d ' '))
 	@if [ "$(GOVET)" != "0" ]; then \
 		echo "some files have vetting errors, run 'make vet'"; \
+		exit 1; \
 	fi
 
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | sort | xargs go test -v
+	@$(MAKE) -f $(MAKEFILE) test-go
 
-## test-all: Run tests including vendor and third party modules.
-test-all:
-	@$(MAKE) -f $(MAKEFILE) test
-	@find . -type f -name '*.go' | grep -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | sort | xargs go test -v
+## test-go         Run go test
+test-go:
+	@find . -type f -name '*.go' | xargs -L1 dirname | sort | uniq | xargs go test -v -race
 
-## test-ui: Launch test UI
+## test-benchmarks Run go benchmarks
+test-benchmarks:
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs go test -benchmem -bench
+
+## test-ui         Launch test UI
 test-ui:
 	$(eval GOCONVEY_PATH=$(shell which goconvey))
-	@if [ -z $(GOCONVEY_PATH) ]; then \
+	@if [ -z "$(GOCONVEY_PATH)" ]; then \
 		GO111MODULE=off go get github.com/smartystreets/goconvey; \
 	fi
-	goconvey
+	goconvey -port 8088 -excludedDirs vendor,node_modules,assets
 
-## test-clean: Clean test cache
+## test-clean      Clean test cache
 test-clean:
 	@go clean -testcache
 
-## fmt: Run formating
+## test-tools      Install test tools
+test-tools:
+	@# golint is deprecated and frozen.
+	$(eval GOLINT_PATH=$(shell which golint))
+	@if [ -z "$(GOLINT_PATH)" ]; then \
+		GO111MODULE=off go get golang.org/x/lint/golint; \
+	fi
+
+	$(eval STATICCHECK_PATH=$(shell which staticcheck))
+	@if [ -z "$(STATICCHECK_PATH)" ]; then \
+		go install honnef.co/go/tools/cmd/staticcheck@v0.3.1; \
+	fi
+
+## fmt             Run formating
 fmt:
-	@gofmt -l . | grep -v -E '^vendor/' | xargs gofmt -w
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs gofmt -l
 
-## lint: Run linting
+## lint            Run linting
 lint:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs golint
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs golint
 
-## staticcheck: Run staticcheck
+## staticcheck     Run staticcheck
 staticcheck:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs staticcheck
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs staticcheck
 
-## vet: Run vetting
+## vet             Run vetting
 vet:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | uniq | xargs go vet 2>&1
+	@find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | sort | uniq | xargs go vet 2>&1
 
-## build: Build binaries
-build:
-	$(eval BIN_VERSION=$(shell git describe --tags --exact-match 2>>/dev/null || echo "v0.0.0-$(shell date '+%Y%m%dT%H%M')"))
-	$(eval GIT_COMMIT=$(shell git diff-index --quiet HEAD -- || echo "$$(git rev-parse --short HEAD)-dirty"; if [ -z "$$GIT_COMMIT" ]; then GIT_COMMIT=$$(git rev-parse --short HEAD); fi))
-	$(eval BUILD_INFO=$(shell go env | grep -E '^GOHOSTOS|^GOHOSTARCH|^GOOS|^GOARCH|^GOARM|^GO386' | tr '\n' ' '))
-	@if [ ! -z $(GOPATH) ]; then \
-		$(eval TARGET_DIR=$(GOPATH)/bin/) \
-		TARGET_DIR=$(TARGET_DIR); \
-	fi
-	@if [ -z "$(BUILD_ARGS)" ]; then \
-		$(eval BUILD_ARGS=-trimpath) \
-		BUILD_ARGS=$(BUILD_ARGS); \
-	fi
-	@echo BUILD_INFO=$(BUILD_INFO)
-	go build -ldflags "-X main.version=$(BIN_VERSION) -X main.gitCommit=$(GIT_COMMIT) -s -w" $(BUILD_ARGS) -o $(TARGET_DIR)gocmdbasic examples/basic/*.go
-
-## build-force: Build binaries (force rebuilding of packages).
-build-force:
-	@$(MAKE) -f $(MAKEFILE) build BUILD_ARGS="-a -trimpath"
-
-## release: Release a version
+## release         Release a version
 release:
-	@if [ -z "$(GIT_TAG)" ]; then \
-		echo "invalid GIT_TAG. Try something like 'make release GIT_TAG=v1.0.0'"; \
+	@if [ "$(shell echo \$${GIT_TAG:0:1})" != "v" ]; then \
+		echo "invalid GIT_TAG (${GIT_TAG}). Try something like 'make release GIT_TAG=v1.0.0'"; \
 		exit 1; \
 	fi
-	git commit -m "$(GIT_TAG)"
 	git tag -a $(GIT_TAG) -m "$(GIT_TAG)"
 	git push --follow-tags
-	git ls-remote --tags
+
+## build           Build
+build:
+	$(eval BIN_VERSION=$(shell git describe --tags --exact-match 2>>/dev/null || echo "$(shell git describe --abbrev=0 2>>/dev/null || echo "v0.0.0")+$(shell date '+%Y%m%d%H%M')"))
+	$(eval GIT_COMMIT=$(shell git describe --match=NEVERMATCH --always --abbrev=7 --dirty))
+	$(eval BUILD_INFO=$(shell go env | grep -E '^GOVERSION|^GOHOSTOS|^GOHOSTARCH|^GOOS|^GOARCH|^GOARM|^GO386|^GOPATH' | tr '\n' ' '))
+	$(eval BUILD_TARGET_DIR=$(shell echo "$$(go env GOPATH)/bin/"))
+
+	@if [ -z "$(BUILD_ARGS)" ]; then \
+		BUILD_ARGS=$(eval BUILD_ARGS=-trimpath); \
+	fi
+	@echo BUILD_INFO=$(BUILD_INFO)
+	go build -ldflags "-X main.version=$(BIN_VERSION) -X main.gitCommit=$(GIT_COMMIT) -s -w" $(BUILD_ARGS) -o $(BUILD_TARGET_DIR)gocmdbasic examples/basic/*.go
+
+## build-force     Build (force rebuilding of packages).
+build-force:
+	@$(MAKE) -f $(MAKEFILE) build BUILD_ARGS="-a -trimpath"
