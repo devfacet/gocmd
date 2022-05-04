@@ -1,0 +1,50 @@
+name: Test
+
+on:
+  push:
+    branches: [ '*' ]
+    tags-ignore: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        default: 'info'
+        type: choice
+        options:
+        - debug
+        - error
+        - fatal
+        - info
+        - panic
+        - warning
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          # https://github.com/actions/checkout/issues/100
+          fetch-depth: 0
+
+      - name: Install test tools
+        run: |
+          make test-tools
+
+      - name: Run Tests
+        run: |
+          make test
+
+      - name: Build
+        run: |
+          make build
