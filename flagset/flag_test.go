@@ -274,7 +274,7 @@ func TestFlag_ValueBy(t *testing.T) {
 		So(flag.ValueBy(), ShouldEqual, "")
 
 		flags05 := struct {
-			Test string `short:"f" env:"GOPATH"`
+			Test string `short:"f" env:"HOME"`
 		}{}
 		args = []string{"./app"}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags05, Args: args})
