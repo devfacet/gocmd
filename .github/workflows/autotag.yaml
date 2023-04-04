@@ -1,0 +1,184 @@
+name: Auto Tag
+
+permissions:
+  contents: write
+  pull-requests: read
+
+on:
+  pull_request:
+    types: [closed]
+
+  workflow_dispatch:
+    inputs:
+      pullNumber:
+        description: Pull request number (i.e. 1)
+        required: true
+      dryRun:
+        description: Dryrun
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+    outputs:
+      PULL_SHA: ${{ steps.check-pr.outputs.PULL_SHA }}
+      RELEASE_TYPE: ${{ steps.check-pr.outputs.RELEASE_TYPE }}
+      NEXT_TAG: ${{ steps.next-tag.outputs.NEXT_TAG }}
+    steps:
+      - name: Check pull request
+        id: check-pr
+        uses: actions/github-script@v6
+        with:
+          retries: 3
+          script: |
+            console.log('github.event_name', '${{ github.event_name }}')
+            let pullNumber
+            if('${{ github.event_name }}' == 'workflow_dispatch') {
+              pullNumber = '${{ github.event.inputs.pullNumber }}'
+            } else if('${{ github.event_name }}' == 'pull_request' && '${{ github.event.pull_request.merged }}' == 'true') {
+              pullNumber = '${{ github.event.pull_request.number }}'
+            } else {
+              console.log('no pull number found')
+              return
+            }
+            console.log('pullNumber', pullNumber)
+
+            const prRes = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber
+            })
+            if(prRes.status != 200) {
+              console.log('prRes', JSON.stringify(prRes))
+              core.setFailed(`failed to retrieve pull request: ${prRes.status}`)
+              return
+            }
+
+            const merged = (prRes.data != undefined && prRes.data.merged != undefined) ? prRes.data.merged : false
+            if('${{ github.event_name }}' == 'workflow_dispatch' && !merged) {
+              core.setFailed(`pull request #${pullNumber} is not merged (only merged PRs are allowed)`)
+              return
+            }
+
+            const labels = (prRes.data != undefined && prRes.data.labels != undefined) ? prRes.data.labels : []
+            let releaseType
+            if(labels.find(label => label.name == "release:major") != undefined) {
+              releaseType = 'major'
+              core.setOutput('RELEASE_TYPE', 'major')
+            } else if(labels.find(label => label.name == "release:minor") != undefined) {
+              releaseType = 'minor'
+              core.setOutput('RELEASE_TYPE', 'minor')
+            } else if(labels.find(label => label.name == "release:patch") != undefined) {
+              releaseType = 'patch'
+            } else {
+              console.log('pull request does not have release labels')
+              return
+            }
+            console.log('RELEASE_TYPE', releaseType)
+            core.setOutput('RELEASE_TYPE', releaseType)
+
+            const pullSHA = (prRes.data != undefined && prRes.data.head != undefined && prRes.data.head.sha != undefined) ? prRes.data.head.sha : ''
+            console.log('PULL_SHA', pullSHA)
+            core.setOutput('PULL_SHA', pullSHA)
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        if: ${{ steps.check-pr.outputs.RELEASE_TYPE != '' }}
+        with:
+          fetch-depth: 0 # Ref: https://github.com/actions/checkout/issues/100
+
+      - name: Get current tag
+        id: current-tag
+        uses: "WyriHaximus/github-action-get-previous-tag@dc52ee2c1eb91ebf1d540ea7bd2f6424fb00f573" # v1.2.2
+        if: ${{ steps.check-pr.outputs.RELEASE_TYPE != '' }}
+        with:
+          fallback: v0.0.0
+
+      - name: Determine next semver version
+        id: next-semver-version
+        uses: madhead/semver-utils@cd1ddc05fca0b1514b697c2ca9fe88d4df4000ae # latest as of 2022-11-11
+        if: ${{ steps.check-pr.outputs.RELEASE_TYPE != '' }}
+        with:
+          version: ${{ steps.current-tag.outputs.tag }}
+
+      - name: Determine next tag
+        id: next-tag
+        uses: actions/github-script@v6
+        if: ${{ steps.check-pr.outputs.RELEASE_TYPE != '' }}
+        with:
+          script: |
+            console.log('semver release: ${{ steps.next-semver-version.outputs.release }}')
+            console.log('semver major: ${{ steps.next-semver-version.outputs.major }}')
+            console.log('semver minor: ${{ steps.next-semver-version.outputs.minor }}')
+            console.log('semver patch: ${{ steps.next-semver-version.outputs.patch }}')
+            console.log('semver inc-major: ${{ steps.next-semver-version.outputs.inc-major }}')
+            console.log('semver inc-minor: ${{ steps.next-semver-version.outputs.inc-minor }}')
+            console.log('semver inc-patch: ${{ steps.next-semver-version.outputs.inc-patch }}')
+
+            let nextTag
+            if('${{ steps.check-pr.outputs.RELEASE_TYPE }}' == 'major') {
+              nextTag = '${{ steps.next-semver-version.outputs.inc-major }}'
+            } else if('${{ steps.check-pr.outputs.RELEASE_TYPE }}' == 'minor') {
+              nextTag = '${{ steps.next-semver-version.outputs.inc-minor }}'
+            } else if('${{ steps.check-pr.outputs.RELEASE_TYPE }}' == 'patch') {
+              nextTag = '${{ steps.next-semver-version.outputs.inc-patch }}'
+            } else {
+              core.setFailed('invalid RELEASE_TYPE: ${{ steps.check-pr.outputs.RELEASE_TYPE }}')
+              return
+            }
+            console.log('nextTag', nextTag)
+            core.setOutput('NEXT_TAG', nextTag)
+
+  tag:
+    runs-on: ubuntu-latest
+    needs: check
+    if: ${{ needs.check.outputs.NEXT_TAG != '' }}
+    steps:
+      - name: Create tag
+        id: create-tag
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PAT_WORKFLOW }}
+          retries: 3
+          script: |
+            if('${{ github.event.inputs.dryRun }}' == 'true') {
+              console.log('skipping tag creation due to dryrun')
+              return
+            }
+            const createTagRes = await github.rest.git.createTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: 'v${{ needs.check.outputs.NEXT_TAG }}',
+              message: 'v${{ needs.check.outputs.NEXT_TAG }}',
+              object: '${{ needs.check.outputs.PULL_SHA }}',
+              type: 'commit',
+              tagger: {
+                name: '${{ secrets.GIT_USER_NAME }}',
+                email: '${{ secrets.GIT_USER_EMAIL }}'
+              }
+            })
+            if(createTagRes.status != 201) {
+              console.log('createTagRes', JSON.stringify(createTagRes))
+              core.setFailed(`failed to create tag: ${createTagRes.status}`)
+              return
+            }
+            console.log('new tag', createTagRes.data.tag)
+            console.log('new tag sha', createTagRes.data.sha)
+
+            const createRefRes = await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${createTagRes.data.tag}`,
+              sha: createTagRes.data.sha
+            })
+            if(createRefRes.status != 201) {
+              console.log('createRefRes', JSON.stringify(createRefRes))
+              core.setFailed(`failed to create reference: ${createRefRes.status}`)
+              return
+            }
+            console.log('new tag ref', createRefRes.data.ref)

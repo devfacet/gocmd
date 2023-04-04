@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2018 Fatih Cetinkaya (http://github.com/devfacet/gocmd)
+Copyright (c) 2018 Fatih Cetinkaya - https://github.com/devfacet/gocmd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

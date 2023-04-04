@@ -76,63 +76,18 @@ func main() {
 	})
 }
 ```
-```shell
-# Build the example app:
-make build
-
-# Run it:
-gocmdbasic
-```
-```shell
-Usage: basic [options...] COMMAND [options...]
-
-A basic app
-
-Options:
-  -h, --help         	Display usage
-  -v, --version      	Display version
-      --vv           	Display version (extended)
-
-Commands:
-  echo               	Print arguments
-  math               	Math functions
-    sqrt             	Calculate square root
-      -n, --number   	Number
-    pow              	Calculate base exponential
-      -b, --base     	Base
-      -e, --exponent 	Exponent
-```
-```shell
-# Try the following commands:
-gocmdbasic echo hello world
-gocmdbasic math sqrt -n 9
-gocmdbasic math pow -b 2 --exponent 2
-gocmdbasic -v
-gocmdbasic --vv
-```
 
 ## Test
 
 ```shell
-# Test everything:
+# Run tests
 make test
 
-# For BDD development:
-# It will open a new browser window. Make sure:
-#   1. There is no errors on the terminal window.
-#   2. There is no other open GoConvey page.
+# Continuous testing
 make test-ui
 
 # Benchmarks
 make test-benchmarks
-```
-
-## Release
-
-```shell
-# Update and commit CHANGELOG.md first (i.e. git add CHANGELOG.md && git commit -m "v1.0.0").
-# Set GIT_TAG using semver (i.e. GIT_TAG=v1.0.0)
-make release GIT_TAG=
 ```
 
 ## Contributing
