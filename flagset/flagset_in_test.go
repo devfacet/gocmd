@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 package flagset
 
@@ -21,7 +19,7 @@ func TestFlagSet_1(t *testing.T) {
 			Required bool      `short:"r" long:"required" required:"true"`
 			Nonempty bool      `short:"n" long:"nonempty" nonempty:"true"`
 			Global   bool      `short:"g" long:"global" global:"true"`
-			Env      string    `short:"e" long:"env" env:"GOPATH"`
+			Env      string    `short:"e" long:"env" env:"HOME"`
 			Bool     bool      `short:"b" long:"bool"`
 			Float64  float64   `short:"f" long:"float64"`
 			Int      int       `short:"i" long:"int"`
@@ -182,7 +180,7 @@ func TestFlagSet_1(t *testing.T) {
 				required:     false,
 				nonempty:     false,
 				global:       false,
-				env:          "GOPATH",
+				env:          "HOME",
 				delimiter:    "",
 				valueDefault: "",
 				valueType:    "string",
@@ -195,7 +193,7 @@ func TestFlagSet_1(t *testing.T) {
 				args:         nil,
 				err:          nil,
 				updatedBy:    nil,
-				value:        os.Getenv("GOPATH"),
+				value:        os.Getenv("HOME"),
 			},
 			{
 				id:           5,

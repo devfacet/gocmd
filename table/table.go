@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 // Package table provides functions for handling tables in terminal
 package table

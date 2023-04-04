@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 package flagset_test
 
@@ -177,14 +175,14 @@ func TestFlag_Global(t *testing.T) {
 func TestFlag_Env(t *testing.T) {
 	Convey("should return the env value of the flag", t, func() {
 		flags := struct {
-			Test string `short:"f" env:"GOPATH"`
+			Test string `short:"f" env:"HOME"`
 		}{}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
 		So(flag, ShouldNotBeNil)
-		So(flag.Env(), ShouldEqual, "GOPATH")
+		So(flag.Env(), ShouldEqual, "HOME")
 	})
 }
 
@@ -276,7 +274,7 @@ func TestFlag_ValueBy(t *testing.T) {
 		So(flag.ValueBy(), ShouldEqual, "")
 
 		flags05 := struct {
-			Test string `short:"f" env:"GOPATH"`
+			Test string `short:"f" env:"HOME"`
 		}{}
 		args = []string{"./app"}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags05, Args: args})

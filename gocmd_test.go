@@ -1,14 +1,12 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 package gocmd_test
 
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -101,7 +99,7 @@ func TestNew(t *testing.T) {
 				Foo bool `short:"f"`
 				Bar bool `short:"f"`
 			}{},
-			Logger:      log.New(ioutil.Discard, "", 0),
+			Logger:      log.New(io.Discard, "", 0),
 			ExitOnError: true,
 		})
 		So(err, ShouldNotBeNil)
@@ -115,7 +113,7 @@ func TestNew(t *testing.T) {
 			Flags: &struct {
 				Foo bool `short:"f" required:"true"`
 			}{},
-			Logger:      log.New(ioutil.Discard, "", 0),
+			Logger:      log.New(io.Discard, "", 0),
 			ExitOnError: true,
 		})
 		So(err, ShouldNotBeNil)
@@ -274,7 +272,7 @@ func TestHandleFlag(t *testing.T) {
 				FH1 struct{} `command:"fh1"`
 				FH2 struct{} `command:"fh2"`
 			}{},
-			Logger: log.New(ioutil.Discard, "", 0),
+			Logger: log.New(io.Discard, "", 0),
 		})
 		So(err, ShouldNotBeNil)
 		So(err, ShouldBeError, errors.New("handler error"))

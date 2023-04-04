@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 // Package flagset provides functions for handling command line arguments
 package flagset
@@ -152,8 +150,22 @@ func New(o Options) (*FlagSet, error) {
 		if flag.env != "" {
 			if ev, ok := os.LookupEnv(flag.env); ok {
 				flag.valueBy = "env"
-				if err := flagSet.setFlag(flag.id, ev); err != nil {
-					flag.err = err
+				if flag.delimiter != "" && strings.HasPrefix(flag.valueType, "[]") {
+					values := strings.Split(ev, flag.delimiter)
+					for _, v := range values {
+						// Ignore empty ones
+						v = strings.TrimSpace(v)
+						if v == "" {
+							continue
+						}
+						if err := flagSet.setFlag(flag.id, v); err != nil {
+							flag.err = err
+						}
+					}
+				} else {
+					if err := flagSet.setFlag(flag.id, ev); err != nil {
+						flag.err = err
+					}
 				}
 				continue
 			}
@@ -161,8 +173,22 @@ func New(o Options) (*FlagSet, error) {
 
 		if flag.valueDefault != "" {
 			flag.valueBy = "default"
-			if err := flagSet.setFlag(flag.id, flag.valueDefault); err != nil {
-				flag.err = err
+			if flag.delimiter != "" && strings.HasPrefix(flag.valueType, "[]") {
+				values := strings.Split(flag.valueDefault, flag.delimiter)
+				for _, v := range values {
+					// Ignore empty ones
+					v = strings.TrimSpace(v)
+					if v == "" {
+						continue
+					}
+					if err := flagSet.setFlag(flag.id, v); err != nil {
+						flag.err = err
+					}
+				}
+			} else {
+				if err := flagSet.setFlag(flag.id, flag.valueDefault); err != nil {
+					flag.err = err
+				}
 			}
 			continue
 		}

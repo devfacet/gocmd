@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 // Package gocmd is a library for building command line applications
 package gocmd
@@ -482,6 +480,5 @@ func (p byFlagHandlerPriority) Less(i, j int) bool { return p[i].priority < p[j]
 
 // Logger is the interface that must be implemented by loggers
 type Logger interface {
-	Fatalf(format string, v ...interface{})
 	Printf(format string, v ...interface{})
 }

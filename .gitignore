@@ -1,6 +1,6 @@
 .DS_Store
-.vscode
 .vs
+.vscode
 Thumbs.db
 
 *.exe
@@ -11,9 +11,7 @@ Thumbs.db
 
 logs/
 node_modules/
-reports/
 releases/
+reports/
 tmp/
 vendor/
-
-examples/basic/basic

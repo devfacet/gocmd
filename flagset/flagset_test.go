@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 package flagset_test
 
@@ -115,7 +113,7 @@ func TestNew(t *testing.T) {
 			Default  int       `short:"d" default:"DEFAULT"`
 			Required int       `short:"r" required:"true"`
 			Nonempty string    `short:"n" nonempty:"true"`
-			Env      int       `short:"e" env:"GOPATH"`
+			Env      int       `short:"e" env:"HOME"`
 			Bool     bool      `short:"b" long:"bool"`
 			Float64  float64   `short:"f" long:"float64"`
 			Int      int       `short:"i" long:"int"`
@@ -169,7 +167,7 @@ func TestNew(t *testing.T) {
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as int"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as int64"))
 		So(flagErrors, ShouldContain, errors.New("failed to parse 'foofoo' as uint"))
-		So(flagErrors, ShouldContain, fmt.Errorf("failed to parse '%s' as int", os.Getenv("GOPATH")))
+		So(flagErrors, ShouldContain, fmt.Errorf("failed to parse '%s' as int", os.Getenv("HOME")))
 		So(flagErrors, ShouldContain, errors.New("argument -S needs a value"))
 	})
 
@@ -903,17 +901,17 @@ func TestNew(t *testing.T) {
 
 	Convey("should return correct flag values (env)", t, func() {
 		flags01 := struct {
-			Env string `short:"e" long:"env" env:"GOPATH"`
+			Env string `short:"e" long:"env" env:"HOME"`
 		}{}
 		args := []string{"./app"}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags01, Args: args})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		So(flagSet.Errors(), ShouldBeNil)
-		So(flags01.Env, ShouldEqual, os.Getenv("GOPATH"))
+		So(flags01.Env, ShouldEqual, os.Getenv("HOME"))
 
 		flags02 := struct {
-			Env string `short:"e" long:"env" env:"GOPATH"`
+			Env string `short:"e" long:"env" env:"HOME"`
 		}{}
 		args = []string{"./app", "-e=/go"}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags02, Args: args})
@@ -923,7 +921,7 @@ func TestNew(t *testing.T) {
 		So(flags02.Env, ShouldEqual, "/go")
 
 		flags03 := struct {
-			Env string `short:"e" long:"env" env:"GOPATH"`
+			Env string `short:"e" long:"env" env:"HOME"`
 		}{}
 		args = []string{"./app", "-e="}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags03, Args: args})
@@ -933,7 +931,7 @@ func TestNew(t *testing.T) {
 		So(flags03.Env, ShouldEqual, "")
 
 		flags04 := struct {
-			Env string `short:"e" long:"env" env:"GOPATH"`
+			Env string `short:"e" long:"env" env:"HOME"`
 		}{}
 		args = []string{"./app", "-e=\"\""}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags04, Args: args})
@@ -943,7 +941,7 @@ func TestNew(t *testing.T) {
 		So(flags04.Env, ShouldEqual, "")
 
 		flags05 := struct {
-			Env string `short:"e" long:"env" env:"GOPATH"`
+			Env string `short:"e" long:"env" env:"HOME"`
 		}{}
 		args = []string{"./app", "-e=''"}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags05, Args: args})
@@ -953,7 +951,7 @@ func TestNew(t *testing.T) {
 		So(flags05.Env, ShouldEqual, "")
 
 		flags10 := struct {
-			Env string `short:"e" long:"env" env:"GOPATH"`
+			Env string `short:"e" long:"env" env:"HOME"`
 		}{}
 		args = []string{"./app", "-e"}
 		flagSet, err = flagset.New(flagset.Options{Flags: &flags10, Args: args})

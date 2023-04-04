@@ -5,66 +5,65 @@ permissions:
 
 on:
   push:
-    tags: [ 'v*.*.*' ]
+    tags: ["v*.*.*"]
 
   workflow_dispatch:
     inputs:
       releaseTag:
-        description: 'Existing git tag to be released (i.e. v1.0.0)'
+        description: Existing git tag (i.e. v0.1.0)
         required: true
+      dryRun:
+        description: Dryrun
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 jobs:
-
-  test:
+  check:
     runs-on: ubuntu-latest
+    if: (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_type == 'tag'))
+    outputs:
+      RELEASE_TAG: ${{ steps.check-tag.outputs.RELEASE_TAG }}
+      REPO_NAME: ${{ steps.check-tag.outputs.REPO_NAME }}
     steps:
-      - name: Setup Go environment
-        uses: actions/setup-go@v2
+      - name: Check release tag
+        id: check-tag
+        uses: actions/github-script@v6
         with:
-          go-version: '1.17'
+          script: |
+            console.log('github.event_name', '${{ github.event_name }}')
+            console.log('github.ref_type', '${{ github.ref_type }}')
+            let releaseTag
+            if('${{ github.event_name }}' == 'workflow_dispatch') {
+              releaseTag = '${{ github.event.inputs.releaseTag }}'
+            } else if('${{ github.event_name }}' == 'push' && '${{ github.ref_type }}' == 'tag') {
+              releaseTag = '${{ github.ref }}'.replace(/^refs\/tags\//, '');
+            } else {
+              console.log('no semver tag found')
+              return
+            }
+            console.log('RELEASE_TAG', releaseTag)
+            core.setOutput('RELEASE_TAG', releaseTag)
+            console.log('REPO_NAME', context.repo.repo)
+            core.setOutput('REPO_NAME', context.repo.repo)
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Check tag semver
+        id: check-tag-semver
+        uses: madhead/semver-utils@cd1ddc05fca0b1514b697c2ca9fe88d4df4000ae # latest as of 2022-11-11
+        if: ${{ steps.check-tag.outputs.RELEASE_TAG != '' }}
         with:
-          # https://github.com/actions/checkout/issues/100
-          fetch-depth: 0
-
-      - name: Install test tools
-        run: |
-          make test-tools
-
-      - name: Run Tests
-        run: |
-          make test
-
-      - name: Build
-        run: |
-          make build
+          version: ${{ steps.check-tag.outputs.RELEASE_TAG }}
+          lenient: false # fail on error
 
   release:
     runs-on: ubuntu-latest
-    needs: test
-    outputs:
-      RELEASE_TAG: ${{ steps.env.outputs.RELEASE_TAG }}
+    needs: check
+    if: ${{ needs.check.outputs.RELEASE_TAG != '' }}
     steps:
-      - name: Setup ENV
-        id: env
-        run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-            RELEASE_TAG=${{ github.event.inputs.releaseTag }}
-          elif [[ "${GITHUB_REF}" == refs/tags/v*.*.* ]]; then
-            RELEASE_TAG=${GITHUB_REF/refs\/tags\//}
-          fi
-          if [[ "${RELEASE_TAG}" != v*.*.* ]]; then
-            echo "invalid release tag (${RELEASE_TAG} - ${GITHUB_REF}), only semver is allowed (i.e v*.*.*)"
-            exit 1
-          fi
-          echo "::set-output name=RELEASE_TAG::${RELEASE_TAG}"
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Release
-        uses: softprops/action-gh-release@v0.1.14
+      - name: Make a release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        if: github.event.inputs.dryRun != 'true'
         with:
-          tag_name: ${{ steps.env.outputs.RELEASE_TAG }}
+          tag_name: ${{ needs.check.outputs.RELEASE_TAG }}

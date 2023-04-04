@@ -1,7 +1,5 @@
-/*
- * gocmd
- * For the full copyright and license information, please view the LICENSE.txt file.
- */
+// gocmd
+// For the full copyright and license information, please view the LICENSE.txt file.
 
 // Package template provides functions for handling templates
 package template
@@ -9,7 +7,7 @@ package template
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"text/template"
 )
 
@@ -41,7 +39,7 @@ func New(o Options) (*Template, error) {
 	// If the file path is not empty then
 	if t.filePath != "" {
 		// Read the file and set the template content
-		b, err := ioutil.ReadFile(t.filePath)
+		b, err := os.ReadFile(t.filePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create template due to %s", err.Error())
 		}
