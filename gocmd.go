@@ -482,6 +482,5 @@ func (p byFlagHandlerPriority) Less(i, j int) bool { return p[i].priority < p[j]
 
 // Logger is the interface that must be implemented by loggers
 type Logger interface {
-	Fatalf(format string, v ...interface{})
 	Printf(format string, v ...interface{})
 }
