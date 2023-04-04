@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.3
+
+- Fix delimiter
+- Update deps
+
 ## v3.1.2 (2021-05-08)
 
 - Replace shell scripts with Makefile
