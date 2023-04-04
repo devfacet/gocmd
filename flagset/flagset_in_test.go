@@ -193,7 +193,7 @@ func TestFlagSet_1(t *testing.T) {
 				args:         nil,
 				err:          nil,
 				updatedBy:    nil,
-				value:        os.Getenv("GOPATH"),
+				value:        os.Getenv("HOME"),
 			},
 			{
 				id:           5,
