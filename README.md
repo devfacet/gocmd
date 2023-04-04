@@ -28,7 +28,7 @@ go get github.com/devfacet/gocmd/v3
 
 ### A basic app
 
-For the full code [click here](examples/basic/main.go).
+For the full code [click here](_examples/basic/main.go).
 
 ```go
 func main() {
