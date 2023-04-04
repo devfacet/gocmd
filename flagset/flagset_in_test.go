@@ -180,7 +180,7 @@ func TestFlagSet_1(t *testing.T) {
 				required:     false,
 				nonempty:     false,
 				global:       false,
-				env:          "GOPATH",
+				env:          "HOME",
 				delimiter:    "",
 				valueDefault: "",
 				valueType:    "string",
