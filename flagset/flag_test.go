@@ -175,14 +175,14 @@ func TestFlag_Global(t *testing.T) {
 func TestFlag_Env(t *testing.T) {
 	Convey("should return the env value of the flag", t, func() {
 		flags := struct {
-			Test string `short:"f" env:"GOPATH"`
+			Test string `short:"f" env:"HOME"`
 		}{}
 		flagSet, err := flagset.New(flagset.Options{Flags: &flags})
 		So(err, ShouldBeNil)
 		So(flagSet, ShouldNotBeNil)
 		flag := flagSet.FlagByName("Test")
 		So(flag, ShouldNotBeNil)
-		So(flag.Env(), ShouldEqual, "GOPATH")
+		So(flag.Env(), ShouldEqual, "HOME")
 	})
 }
 

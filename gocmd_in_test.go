@@ -34,9 +34,9 @@ func TestCmd_usageItems(t *testing.T) {
 					Baz bool `short:"b" long:"baz" description:"Test baz"`
 					Qux struct {
 						Quux    bool   `short:"q" long:"quux" description:"Test quux"`
-						String  string `short:"s" long:"string" default:"/go" env:"GOPATH" description:"Test"`
+						String  string `short:"s" long:"string" default:"/go" env:"HOME" description:"Test"`
 						Default string `short:"d" long:"default" default:"default" description:"Test"`
-						Env     string `short:"e" long:"env" env:"GOPATH" description:"Test"`
+						Env     string `short:"e" long:"env" env:"HOME" description:"Test"`
 					} `command:"qux" description:"Qux command"`
 				} `command:"bar" description:"Bar command"`
 			}{},
@@ -82,13 +82,13 @@ func TestCmd_usageItems(t *testing.T) {
 		So(usageItems[3].right, ShouldEqual, "Test quux")
 		So(usageItems[3].level, ShouldEqual, 3)
 		So(usageItems[4].left, ShouldEqual, "-s, --string")
-		So(usageItems[4].right, ShouldEqual, "Test (default /go - override $GOPATH)")
+		So(usageItems[4].right, ShouldEqual, "Test (default /go - override $HOME)")
 		So(usageItems[4].level, ShouldEqual, 3)
 		So(usageItems[5].left, ShouldEqual, "-d, --default")
 		So(usageItems[5].right, ShouldEqual, "Test (default default)")
 		So(usageItems[5].level, ShouldEqual, 3)
 		So(usageItems[6].left, ShouldEqual, "-e, --env")
-		So(usageItems[6].right, ShouldEqual, "Test (default $GOPATH)")
+		So(usageItems[6].right, ShouldEqual, "Test (default $HOME)")
 		So(usageItems[6].level, ShouldEqual, 3)
 	})
 }
